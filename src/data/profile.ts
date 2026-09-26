@@ -148,8 +148,8 @@ export const nowItems: L[] = [
     tr: 'TEKNOFEST 2026: Havacılıkta Yapay Zekâ finali ve PATHIKA otonom kara aracı',
   },
   {
-    en: 'National Technology Academy: AI Specialization Program',
-    tr: 'Milli Teknoloji Akademisi: Yapay Zekâ Uzmanlık Programı',
+    en: 'Completed the National Technology Academy AI Specialization Program (Aug 2026)',
+    tr: 'Milli Teknoloji Akademisi Yapay Zekâ Uzmanlık Programı’nı tamamladım (Ağustos 2026)',
   },
 ];
 

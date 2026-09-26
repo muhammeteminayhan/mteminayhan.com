@@ -48,7 +48,7 @@ const columns: { title: string; icon: string; items: TimelineItem[] }[] = [
                     </p>
                     <h4 class="mt-1.5 font-semibold">{item.title[lang]}</h4>
                     <p class="text-sm text-accent">
-                      {item.org}
+                      {typeof item.org === 'string' ? item.org : item.org[lang]}
                       <span class="text-faint"> · {item.place[lang]}</span>
                     </p>
                     {item.points && (
