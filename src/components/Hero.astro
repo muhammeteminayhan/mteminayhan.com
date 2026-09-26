@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
+import Verse from './Verse.astro';
 import portrait from '@/assets/me/portrait.jpg';
 import { heroRoles, profile } from '@/data/profile';
 import type { Lang } from '@/i18n/ui';
@@ -20,6 +21,10 @@ const roles = heroRoles[lang];
   <div class="glow -z-20 top-[-10%] left-[-10%] size-[28rem] bg-accent/15" aria-hidden="true"></div>
   <div class="glow -z-20 right-[-8%] bottom-[-10%] size-[26rem] bg-cyan/10 [animation-delay:-6s]" aria-hidden="true"></div>
   <canvas data-particles class="absolute inset-0 -z-10 size-full" aria-hidden="true"></canvas>
+
+  <div class="container-page">
+    <Verse lang={lang} />
+  </div>
 
   <div class="container-page grid items-center gap-12 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
     <div>

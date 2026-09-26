@@ -1,0 +1,57 @@
+---
+/** En'âm 6:162 shown at the top of the home page: Arabic with Turkish and English meal. */
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const arabic = 'قُلْ إِنَّ صَلَاتِي وَنُسُكِي وَمَحْيَايَ وَمَمَاتِي لِلَّهِ رَبِّ الْعَالَمِينَ';
+const meal = {
+  tr: 'De ki: “Şüphesiz benim namazım, ibadetlerim, hayatım ve ölümüm âlemlerin Rabbi Allah içindir.”',
+  en: 'Say: “Indeed, my prayer, my acts of worship, my living and my dying are for Allah, Lord of the worlds.”',
+};
+const source = { tr: 'En‘âm Sûresi · 162', en: 'Sūrat al-Anʿām · 6:162' };
+const order: Lang[] = lang === 'tr' ? ['tr', 'en'] : ['en', 'tr'];
+---
+
+<figure class="verse reveal relative isolate mx-auto mb-14 max-w-3xl px-2 text-center sm:mb-16">
+  <div class="flex items-center justify-center gap-4" aria-hidden="true">
+    <span class="h-px w-16 bg-gradient-to-r from-transparent to-accent/70 sm:w-28"></span>
+    <svg viewBox="0 0 24 24" class="size-5 text-accent">
+      <rect x="5" y="5" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2" />
+      <rect x="5" y="5" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2" transform="rotate(45 12 12)" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" />
+    </svg>
+    <span class="h-px w-16 bg-gradient-to-l from-transparent to-accent/70 sm:w-28"></span>
+  </div>
+
+  <blockquote class="mt-6">
+    <p lang="ar" dir="rtl" class="font-quran text-[1.75rem] leading-[2.2] text-fg sm:text-[2.35rem] sm:leading-[2.1]">
+      {arabic}
+    </p>
+    <p lang={order[0]} class="mx-auto mt-4 max-w-2xl text-[0.95rem] leading-relaxed text-muted italic text-balance sm:text-base">
+      {meal[order[0]]}
+    </p>
+    <p lang={order[1]} class="mx-auto mt-2 max-w-2xl text-[0.8rem] leading-relaxed text-faint italic text-balance sm:text-sm">
+      {meal[order[1]]}
+    </p>
+  </blockquote>
+
+  <figcaption class="mt-5 font-mono text-[0.68rem] tracking-[0.22em] text-accent uppercase">
+    {source[lang]}
+  </figcaption>
+</figure>
+
+<style>
+  .verse::before {
+    content: '';
+    position: absolute;
+    inset: -1.5rem -2rem;
+    z-index: -1;
+    border-radius: 2rem;
+    background: radial-gradient(ellipse at center, color-mix(in srgb, var(--bg) 88%, transparent) 30%, transparent 72%);
+    pointer-events: none;
+  }
+</style>
