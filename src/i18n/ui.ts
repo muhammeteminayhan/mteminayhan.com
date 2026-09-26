@@ -95,7 +95,7 @@ export const ui = {
     'contact.eyebrow': 'Contact',
     'contact.title': "Have a robotics or perception problem? Let's talk.",
     'contact.lead':
-      'I am open to AI / robotics engineering roles, internships and research collaborations, remote or in Türkiye. The fastest way to reach me is email.',
+      'I am available now for full-time AI / robotics engineering roles and open to research collaborations, remote or in Türkiye. The fastest way to reach me is email.',
     'contact.copy': 'Copy email',
     'contact.copied': 'Copied!',
     'contact.name': 'Name',
@@ -204,7 +204,7 @@ export const ui = {
     'contact.eyebrow': 'İletişim',
     'contact.title': 'Robotik veya algı üzerine bir probleminiz mi var? Konuşalım.',
     'contact.lead':
-      'Uzaktan veya Türkiye’de AI / robotik mühendisliği pozisyonlarına, stajlara ve araştırma iş birliklerine açığım. Bana en hızlı e-postayla ulaşabilirsiniz.',
+      'Uzaktan veya Türkiye’de tam zamanlı AI / robotik mühendisliği pozisyonlarına hemen başlayabilirim; araştırma iş birliklerine de açığım. Bana en hızlı e-postayla ulaşabilirsiniz.',
     'contact.copy': 'E-postayı kopyala',
     'contact.copied': 'Kopyalandı!',
     'contact.name': 'Ad Soyad',

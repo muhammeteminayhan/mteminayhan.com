@@ -24,7 +24,7 @@ npm run build    # static output in dist/
 | Skills | `src/data/skills.ts` |
 | Gallery photos | `src/data/gallery.ts` + `src/assets/me/` |
 | UI strings (EN/TR) | `src/i18n/ui.ts` |
-| CV download | `public/cv/Muhammet_Emin_Ayhan_CV.pdf` |
+| CV (source → PDF) | `cv/cv-en.html` → `npm run cv` → `public/cv/Muhammet_Emin_Ayhan_CV.pdf` |
 | Colours / theme | `src/styles/global.css` |
 
 ## Contact form

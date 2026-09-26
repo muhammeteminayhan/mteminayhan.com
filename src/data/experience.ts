@@ -12,27 +12,6 @@ export type TimelineItem = {
 
 export const work: TimelineItem[] = [
   {
-    title: { en: 'AI / ML Engineer Intern', tr: 'AI / ML Mühendisi Stajyeri' },
-    org: 'AAD Bilişim ve Danışmanlık',
-    place: { en: 'İstanbul, Türkiye', tr: 'İstanbul, Türkiye' },
-    start: { en: 'Jan 2026', tr: 'Oca 2026' },
-    points: [
-      {
-        en: 'Developed state-estimation algorithms on IMU and sensor data with Kalman / Extended Kalman filtering for position and velocity under noisy, GPS-denied conditions; validated in simulation.',
-        tr: 'Gürültülü ve GPS’siz koşullarda konum ve hız kestirimi için IMU ve sensör verisi üzerinde Kalman / Genişletilmiş Kalman filtresiyle durum kestirimi algoritmaları geliştirdim; simülasyonda doğruladım.',
-      },
-      {
-        en: 'Built data-processing and ML prototyping pipelines in Python for data-driven decision-support systems.',
-        tr: 'Veriye dayalı karar destek sistemleri için Python’da veri işleme ve ML prototipleme hatları kurdum.',
-      },
-      {
-        en: 'Supported the integration of AI components into application prototypes.',
-        tr: 'AI bileşenlerinin uygulama prototiplerine entegrasyonunu destekledim.',
-      },
-    ],
-    tags: ['Kalman / EKF', 'Python', 'State estimation'],
-  },
-  {
     title: { en: 'Backend Developer Intern', tr: 'Backend Geliştirici Stajyeri' },
     org: 'Enoca Bilişim',
     place: { en: 'Konya, Türkiye', tr: 'Konya, Türkiye' },
@@ -49,6 +28,28 @@ export const work: TimelineItem[] = [
       },
     ],
     tags: ['Java', 'Spring Boot', 'PostgreSQL', 'Keycloak'],
+  },
+  {
+    title: { en: 'AI / ML Engineer Intern', tr: 'AI / ML Mühendisi Stajyeri' },
+    org: 'AAD Bilişim ve Danışmanlık',
+    place: { en: 'İstanbul, Türkiye', tr: 'İstanbul, Türkiye' },
+    start: { en: 'Jan 2026', tr: 'Oca 2026' },
+    end: { en: 'May 2026', tr: 'May 2026' },
+    points: [
+      {
+        en: 'Developed state-estimation algorithms on IMU and sensor data with Kalman / Extended Kalman filtering for position and velocity under noisy, GPS-denied conditions; validated in simulation.',
+        tr: 'Gürültülü ve GPS’siz koşullarda konum ve hız kestirimi için IMU ve sensör verisi üzerinde Kalman / Genişletilmiş Kalman filtresiyle durum kestirimi algoritmaları geliştirdim; simülasyonda doğruladım.',
+      },
+      {
+        en: 'Built data-processing and ML prototyping pipelines in Python for data-driven decision-support systems.',
+        tr: 'Veriye dayalı karar destek sistemleri için Python’da veri işleme ve ML prototipleme hatları kurdum.',
+      },
+      {
+        en: 'Supported the integration of AI components into application prototypes.',
+        tr: 'AI bileşenlerinin uygulama prototiplerine entegrasyonunu destekledim.',
+      },
+    ],
+    tags: ['Kalman / EKF', 'Python', 'State estimation'],
   },
 ];
 

@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Muhammet Emin Ayhan — CV</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 9mm 12mm 8mm;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.8pt;
+        line-height: 1.28;
+        color: #1a1a1a;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      a {
+        color: #1f3a93;
+        text-decoration: none;
+      }
+      header {
+        text-align: center;
+        padding-bottom: 5pt;
+        border-bottom: 0.6pt solid #b9c0cc;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18.5pt;
+        letter-spacing: 0.4pt;
+        font-weight: 700;
+      }
+      .role {
+        margin-top: 2pt;
+        font-size: 10.5pt;
+        color: #1f3a93;
+      }
+      .contact {
+        margin-top: 2pt;
+        font-size: 8.4pt;
+        color: #444;
+      }
+      .contact .sep {
+        color: #9aa3b2;
+        padding: 0 3pt;
+      }
+      h2 {
+        margin: 6pt 0 2.5pt;
+        padding-bottom: 1.2pt;
+        font-size: 10.6pt;
+        font-weight: 700;
+        color: #1f3a93;
+        text-transform: uppercase;
+        letter-spacing: 0.3pt;
+        border-bottom: 1.1pt solid #1f3a93;
+      }
+      p {
+        margin: 0;
+      }
+      .summary {
+        text-align: justify;
+      }
+      .skills p {
+        margin: 0.6pt 0;
+      }
+      .skills b {
+        font-weight: 700;
+      }
+      .item {
+        margin-top: 3.2pt;
+        break-inside: avoid;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8pt;
+      }
+      .row .title {
+        font-weight: 700;
+      }
+      .row .meta {
+        flex-shrink: 0;
+        font-style: italic;
+        color: #444;
+        text-align: right;
+      }
+      .row .date {
+        flex-shrink: 0;
+        color: #333;
+        text-align: right;
+      }
+      .org {
+        font-style: italic;
+        color: #444;
+      }
+      ul {
+        margin: 1pt 0 0;
+        padding-left: 11pt;
+      }
+      li {
+        margin: 0.6pt 0;
+      }
+      .tight .row {
+        margin: 0.8pt 0;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 22pt;
+      }
+      .muted {
+        color: #555;
+      }
+      .hl {
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>MUHAMMET EMİN AYHAN</h1>
+      <div class="role">AI &amp; Robotics Engineer · Perception, Navigation &amp; Robot Learning</div>
+      <div class="contact">
+        İstanbul, Türkiye<span class="sep">•</span><a href="mailto:mteminayhan@gmail.com">mteminayhan@gmail.com</a
+        ><span class="sep">•</span>+90 531 597 23 11
+      </div>
+      <div class="contact">
+        <a href="https://mteminayhan.com">mteminayhan.com</a><span class="sep">•</span
+        ><a href="https://www.linkedin.com/in/mteminayhan">linkedin.com/in/mteminayhan</a><span class="sep">•</span
+        ><a href="https://github.com/muhammeteminayhan">github.com/muhammeteminayhan</a>
+      </div>
+    </header>
+
+    <h2>Summary</h2>
+    <p class="summary">
+      Computer engineer (Selçuk University, 2026) building perception, navigation and learning systems for robots and UAVs:
+      vision-language-action fine-tuning (SmolVLA / LeRobot), GPS-denied localization (neural dead reckoning, visual odometry,
+      Kalman / EKF), real-time detection and ROS&nbsp;2 autonomy on NVIDIA Jetson, measured on held-out data and shipped as
+      Docker / CUDA services, ROS&nbsp;2 nodes and REST APIs. <span class="hl">TEKNOFEST 2026 AI in Aviation finalist</span>;
+      available immediately.
+    </p>
+
+    <h2>Core Skills</h2>
+    <div class="skills">
+      <p><b>Languages:</b> Python, C++, Java, Dart, Swift, C#, SQL</p>
+      <p>
+        <b>Robotics &amp; Autonomy:</b> ROS 2 Humble, Nav2, SLAM (slam_toolbox), robot_localization, Gazebo, MuJoCo, Jetson Orin,
+        STM32
+      </p>
+      <p>
+        <b>Navigation &amp; Estimation:</b> Kalman / EKF, sensor fusion, visual odometry (RAFT optical flow, homography), neural
+        dead reckoning
+      </p>
+      <p>
+        <b>Machine Learning:</b> PyTorch, VLA fine-tuning (SmolVLA, LoRA), imitation learning, LSTM / GRU / TCN, scikit-learn, XGBoost
+      </p>
+      <p><b>Computer Vision:</b> YOLO11 / YOLOv8, pose estimation, ByteTrack, EasyOCR / ALPR, SAHI, DINOv3, OpenCV</p>
+      <p>
+        <b>Engineering &amp; Tools:</b> Docker (CUDA), TorchScript, Flask REST, Git, Linux; Spring Boot, PostgreSQL, Flutter
+      </p>
+    </div>
+
+    <h2>Experience</h2>
+    <div class="item">
+      <div class="row"><span class="title">Backend Developer Intern (Java Spring Boot)</span><span class="date">Summer 2026</span></div>
+      <div class="org">Enoca Bilişim — Konya, Türkiye</div>
+      <ul>
+        <li>Built Spring Boot REST APIs (Controller–Service–Repository, PostgreSQL / JPA) with Keycloak role-based access control.</li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="row"><span class="title">AI / ML Engineer Intern</span><span class="date">Jan 2026 – May 2026</span></div>
+      <div class="org">AAD Bilişim ve Danışmanlık — İstanbul, Türkiye</div>
+      <ul>
+        <li>Developed Kalman / EKF state estimation on IMU data for position and velocity in GPS-denied conditions; validated in simulation.</li>
+        <li>Built Python data-processing and ML prototyping pipelines for decision-support systems.</li>
+      </ul>
+    </div>
+
+    <h2>Key Projects</h2>
+    <div class="item">
+      <div class="row">
+        <span class="title">Teaching Cost Curve — Robot Learning with Vision-Language-Action Models</span
+        ><span class="meta">Independent research · 2026</span>
+      </div>
+      <ul>
+        <li>
+          LoRA fine-tuned SmolVLA (450M, 0.66% of weights trained) on unseen LIBERO manipulation tasks on a single 8 GB GPU:
+          success rose from <b>0% to 66.7% with only 5 demonstrations</b> (76.3% with 40; 300 episodes per point, Wilson 95% CIs).
+        </li>
+        <li>Showed that teaching a new task erases the old one (38% → 0%); fully reproducible pipeline guarded by invariant tests.</li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="row">
+        <span class="title">Aerial AI — GPS-Free Visual Odometry from UAV Imagery</span
+        ><span class="meta">TEKNOFEST 2026 AI in Aviation · Finalist</span>
+      </div>
+      <ul>
+        <li>
+          Owned the GPS-free positioning task (40% of the score): RAFT optical flow + homography with a keyframe ladder;
+          <b>3.54 m mean error</b> over a full 2,256-frame rehearsal, 14× below the hold-position baseline.
+        </li>
+        <li>Built a three-flight acceptance gate (incl. thermal) against overfitting; a quality-gate fix cut thermal error by 31%.</li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="row">
+        <span class="title">GPS-Denied UAV Localization — Neural Dead Reckoning</span><span class="meta">Independent project · 2026</span>
+      </div>
+      <ul>
+        <li>
+          LSTM on 19 GPS-free sensor channels predicts per-second displacement: <b>44.4 m mean error after 4.5 min without GPS</b>,
+          ~38× better than classical dead reckoning, ≈1 ms CPU inference (TorchScript).
+        </li>
+        <li>Found and removed a hidden GPS leak (GPS-fused yaw) in the inputs; barometer fusion cut vertical error by 45%.</li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="row">
+        <span class="title">Roadside Driver-Behaviour Analytics</span><span class="meta">TEKNOFEST 2026 5G &amp; Smart Road Safety</span>
+      </div>
+      <ul>
+        <li>
+          YOLO11 detection &amp; tracking, license-plate recognition (EasyOCR + voting) and pose-geometry driver-action detection
+          from night-time windshield video; <b>precision 1.00 with zero false positives</b>; offline Docker / CUDA 12.1 service.
+        </li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="row">
+        <span class="title">PATHIKA — Autonomous Ground Vehicle</span><span class="meta">TEKNOFEST 2026 Unmanned Ground Vehicle</span>
+      </div>
+      <ul>
+        <li>
+          ROS 2 Humble on Jetson Orin NX: owned SLAM, slalom planner, control and FSM mission manager; Nav2, EKF, Gazebo, STM32 e-stop.
+        </li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="row">
+        <span class="title">MACHINOVA — ML-Based CFRP Surface-Roughness Prediction</span><span class="meta">TUSAŞ Lift Up · Graduation project</span>
+      </div>
+      <ul>
+        <li>
+          Five regressors on a Taguchi L9 design + ANOVA; RSM model <b>CV R² = 0.978</b> (RMSE 0.012 µm); desktop app, .exe and REST API.
+        </li>
+      </ul>
+    </div>
+
+    <h2>Education &amp; Training</h2>
+    <div class="tight">
+      <div class="row"><span><b>B.Sc. in Computer Engineering</b> — Selçuk University, Konya</span><span class="date">2022 – 2026 · GPA 3.56 / 4.00</span></div>
+      <div class="row"><span>Artificial Intelligence Specialization Program — National Technology Academy</span><span class="date">Dec 2025 – Present</span></div>
+      <div class="row"><span>Autonomous Driving Technologies Specialization — National Technology Academy</span><span class="date">Sep 2024 – May 2025</span></div>
+    </div>
+
+    <h2>Honors &amp; Competitions</h2>
+    <div class="tight two-col">
+      <div class="row"><span><b>TEKNOFEST AI in Aviation</b></span><span class="date"><b>Finalist · 2026</b></span></div>
+      <div class="row"><span>BTK Academy Hackathon</span><span class="date">Finalist · 2026</span></div>
+      <div class="row"><span>TEKNOFEST Air Defense Systems</span><span class="date">Finalist · 2025</span></div>
+      <div class="row"><span>TEKNOFEST × Hepsiburada AI Hackathon</span><span class="date">Finalist · 2025</span></div>
+      <div class="row"><span>INGHub Churn Prediction Datathon</span><span class="date">Finalist · 2025</span></div>
+      <div class="row"><span>TEKNOFEST Flying Car Simulation</span><span class="date">6th place · 2024</span></div>
+    </div>
+
+    <h2>Certifications &amp; Languages</h2>
+    <div class="tight">
+      <p><b>Certifications:</b> Deep Learning for Image Processing; Deep Learning for Natural Language Processing (BTK Academy)</p>
+      <p style="margin-top: 1pt"><b>Languages:</b> Turkish (Native) • English (B2)</p>
+    </div>
+  </body>
+</html>

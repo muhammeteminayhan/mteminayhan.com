@@ -136,8 +136,8 @@ export const focusAreas: { icon: string; title: L; text: L }[] = [
 
 export const nowItems: L[] = [
   {
-    en: 'AI / ML Engineer Intern at AAD Bilişim: state estimation and ML prototypes',
-    tr: 'AAD Bilişim’de AI / ML Mühendisi Stajyeri: durum kestirimi ve ML prototipleri',
+    en: 'Open to full-time AI / robotics engineering roles, available immediately',
+    tr: 'Tam zamanlı AI / robotik mühendisliği pozisyonlarına açığım, hemen başlayabilirim',
   },
   {
     en: 'Measuring how many demonstrations a robot needs to learn a new part (SmolVLA)',

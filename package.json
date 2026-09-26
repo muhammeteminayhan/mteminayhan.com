@@ -11,7 +11,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "cv": "node scripts/build-cv.mjs"
   },
   "allowScripts": {
     "esbuild": true,
