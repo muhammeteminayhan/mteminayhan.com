@@ -1,0 +1,19 @@
+---
+import type { GetStaticPaths } from 'astro';
+import ProjectDetail from '@/views/ProjectDetail.astro';
+import { getProject } from '@/data/projects';
+import { getCaseStudies, slugOf } from '@/lib/content';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCaseStudies('tr');
+  return entries.map((entry) => {
+    const project = getProject(slugOf(entry.id));
+    if (!project) throw new Error(`Case study ${entry.id} has no matching entry in src/data/projects.ts`);
+    return { params: { slug: project.slug }, props: { entry, project } };
+  });
+}) satisfies GetStaticPaths;
+
+const { entry, project } = Astro.props;
+---
+
+<ProjectDetail lang="tr" project={project} entry={entry} />

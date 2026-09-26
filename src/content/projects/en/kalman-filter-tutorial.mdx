@@ -1,0 +1,49 @@
+---
+title: 'Kalman / EKF from Scratch'
+description: 'A from-scratch Kalman and Extended Kalman Filter library in NumPy with seven progressive examples, from 1D tracking to accelerometer–barometer fusion, EKF radar and a real drone flight log.'
+---
+
+import fusion from '@/assets/projects/kalman-filter-tutorial/sensor-fusion.png';
+import tracking from '@/assets/projects/kalman-filter-tutorial/2d-tracking.png';
+import flight from '@/assets/projects/kalman-filter-tutorial/flight-altitude.png';
+
+## Why I wrote it
+
+State estimation is the quiet backbone of robotics: every drone, rover and phone fuses noisy sensors into one belief about where it is. I wanted a version I fully understood, so I wrote the filters myself and built seven runnable examples that each add one idea. The same ideas run through my state-estimation internship work and the [GPS-denied UAV project](/projects/gps-denied-uav-localization/).
+
+## The library
+
+Two small classes with minimal dependencies (NumPy / SciPy): a linear `KalmanFilter` with a Joseph-form covariance update for numerical stability, and an `ExtendedKalmanFilter` that linearises non-linear models through their Jacobians.
+
+```python
+kf = KalmanFilter(
+    F=np.array([[1, dt], [0, 1]]),   # constant-velocity model
+    H=np.array([[1, 0]]),            # we measure position only
+    Q=np.diag([0.05, 0.05]),         # process noise
+    R=np.array([[9.0]]),             # measurement noise
+    x0=[0, 0], P0=np.diag([10, 10]),
+)
+for z in measurements:
+    kf.predict()
+    kf.update(z)
+```
+
+## Seven examples, one idea at a time
+
+1. **A noisy measurement:** the problem statement.
+2. **1D constant velocity:** from position alone, the filter also infers velocity. Position RMSE **2.7 → 1.7 m**.
+3. **Constant acceleration:** follows a manoeuvring target.
+4. **2D tracking:** a 4-state `[x, vx, y, vy]` filter along a curved path. Track RMSE **2.2 → 0.9 m**.
+5. **Sensor fusion:** accelerometer drives the prediction, barometer corrects it.
+6. **EKF radar:** range and bearing are non-linear in position, so the EKF linearises each step.
+7. **Real flight log:** a real ~45-minute tethered-drone flight.
+
+<Figure src={fusion} alt="Altitude estimate from accelerometer-only, barometer-only and fused Kalman filter versus ground truth" caption="Example 05: altitude RMSE is 4.0 m from the barometer, 32 m from the accelerometer alone and 0.8 m fused." />
+
+<Figure src={tracking} alt="2D object tracking: noisy position fixes scattered around a curved true path, with the Kalman estimate following the path closely" caption="Example 04: 2D tracking along a curved path." />
+
+## The real-data case study
+
+The last example leaves simulation behind. It fuses the onboard **barometer** with **IMU vertical acceleration**, rotated into the world frame with the attitude quaternion, and validates against survey-grade ground truth. The fused estimate stays within **2.7 m** of ground truth while raw GPS is **5.5 m** off, and the zoom panel shows the filter smoothing real barometer jitter.
+
+<Figure src={flight} alt="Real drone flight: raw GPS, barometer and fused Kalman altitude compared to ground truth over 45 minutes, with a zoomed panel" caption="Example 07: real ~45-minute tethered-drone flight log." />

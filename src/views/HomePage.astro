@@ -1,0 +1,67 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/Hero.astro';
+import MetricStrip from '@/components/MetricStrip.astro';
+import About from '@/components/About.astro';
+import FeaturedProjects from '@/components/FeaturedProjects.astro';
+import Timeline from '@/components/Timeline.astro';
+import Awards from '@/components/Awards.astro';
+import Skills from '@/components/Skills.astro';
+import Gallery from '@/components/Gallery.astro';
+import BlogTeaser from '@/components/BlogTeaser.astro';
+import Contact from '@/components/Contact.astro';
+import { profile } from '@/data/profile';
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: profile.name,
+    url: profile.site,
+    image: `${profile.site}/og/portrait.jpg`,
+    jobTitle: profile.title.en,
+    email: `mailto:${profile.email}`,
+    address: { '@type': 'PostalAddress', addressLocality: 'İstanbul', addressCountry: 'TR' },
+    alumniOf: { '@type': 'CollegeOrUniversity', name: 'Selçuk University' },
+    knowsAbout: [
+      'Robotics',
+      'Robot learning',
+      'Vision-language-action models',
+      'Computer vision',
+      'Visual odometry',
+      'Sensor fusion',
+      'Kalman filter',
+      'ROS 2',
+      'Machine learning',
+    ],
+    knowsLanguage: ['tr', 'en'],
+    sameAs: [profile.github, profile.linkedin],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: profile.name,
+    url: profile.site,
+    inLanguage: ['en', 'tr'],
+  },
+];
+---
+
+<BaseLayout lang={lang} type="profile" jsonLd={jsonLd}>
+  <Hero lang={lang} />
+  <MetricStrip lang={lang} />
+  <About lang={lang} />
+  <FeaturedProjects lang={lang} />
+  <Timeline lang={lang} />
+  <Awards lang={lang} />
+  <Skills lang={lang} />
+  <Gallery lang={lang} />
+  <BlogTeaser lang={lang} />
+  <Contact lang={lang} />
+</BaseLayout>

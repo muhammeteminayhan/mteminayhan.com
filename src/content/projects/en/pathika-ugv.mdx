@@ -1,0 +1,49 @@
+---
+title: 'PATHIKA: Autonomous Ground Vehicle'
+description: 'ROS 2 Humble autonomy stack for a 4×4 unmanned ground vehicle on Jetson Orin NX: SLAM, EKF sensor fusion, Nav2, a slalom planner and an FSM mission manager for TEKNOFEST 2026.'
+---
+
+## The vehicle
+
+PATHIKA is a 4×4 skid-steer unmanned ground vehicle built for the **TEKNOFEST 2026 Unmanned Ground Vehicle** competition. It has to complete the course in two runs: one remote-controlled and one fully autonomous.
+
+| Component | Model | Notes |
+| --- | --- | --- |
+| Main computer | NVIDIA Jetson Orin NX 16 GB | 100 TOPS, CUDA, TensorRT |
+| LiDAR | Slamtec RPLidar A1M8 | 360°, 12 m range |
+| Depth camera | Intel RealSense D455 | 87° FOV, built-in IMU |
+| Drive camera | Logitech C920S | 1920 × 1080 |
+| Aiming camera | Feelworld 4K10X | 10× optical zoom |
+| Motors / ESCs | Flipsky 6384 × 4 / FSESC 6.9 × 4 | BLDC, FOC over CAN, 6 kW total |
+| Battery | 108 × 18650 Li-ion (12S9P) | 44 V nominal, 1.1 kWh |
+| Safety MCU | STM32 NUCLEO-G0B1RE | independent emergency stop & watchdog |
+
+## Software architecture
+
+Everything runs on **ROS 2 Humble** as a set of packages, developed and tested in **Gazebo** first:
+
+- **`pathika_localization`**: EKF sensor fusion with `robot_localization` (wheel odometry + IMU) and `slam_toolbox` mapping.
+- **`pathika_navigation`**: Nav2 with the MPPI controller, plus a dedicated **slalom planner** for the cone section.
+- **`pathika_perception`**: LiDAR-based cone detection publishing cone poses, with YOLOv8 visual detection on the camera stream (in progress).
+- **`pathika_control`**: skid-steer kinematics that turn `/cmd_vel` into four wheel velocities, and PID motor control through VESC over CAN.
+- **`pathika_bringup`**: top-level launch files and the **finite-state-machine mission manager** that switches modes and stages on `/mission_cmd` and reports on `/mission_status`.
+- **`pathika_description` / `pathika_msgs`**: the URDF/xacro model (chassis, wheels, LiDAR, IMU, cameras) and custom messages (Cone, Detection, TurretCommand, MissionStatus).
+
+A key design choice is that **safety does not depend on the main computer**: the STM32 supervises an independent emergency stop and watchdog, so a crashed node or a hung Jetson cannot leave the motors running.
+
+## My part
+
+In a software team of three, I own **SLAM, the slalom planner, the control layer, the FSM mission manager and the bringup**, and co-own the vehicle description. Perception, EKF fusion and Nav2 configuration are owned by my teammates.
+
+```bash
+# full system in simulation: Gazebo + SLAM + Nav2 + perception + control + FSM
+ros2 launch pathika_bringup bringup.launch.py use_sim_time:=true
+
+# drive the mission manager
+ros2 topic pub /mission_cmd std_msgs/msg/String "data: 'set_autonomous'"
+ros2 topic echo /mission_status
+```
+
+## Status
+
+The stack runs end to end in simulation, and the work now is bringing it onto the real vehicle: sensor calibration, controller tuning on the real drivetrain, and the perception models that are still being trained. I will add measured results from the field once the competition runs are complete.

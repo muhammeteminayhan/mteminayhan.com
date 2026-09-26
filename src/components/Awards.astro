@@ -1,0 +1,82 @@
+---
+import Icon from './Icon.astro';
+import SectionHeading from './SectionHeading.astro';
+import { awards, certifications } from '@/data/awards';
+import type { Lang } from '@/i18n/ui';
+import { useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const finals = awards.filter((a) => a.result.en === 'Finalist').length;
+---
+
+<section id="awards" class="py-20 sm:py-28" aria-labelledby="awards-title">
+  <div class="container-page">
+    <SectionHeading id="awards-title" eyebrow={t('awards.eyebrow')} title={t('awards.title')} />
+
+    <div class="grid gap-10 lg:grid-cols-[1.6fr_1fr]">
+      <ol class="card divide-y divide-line overflow-hidden">
+        {
+          awards.map((a, i) => (
+            <li class="reveal group flex items-center gap-4 px-5 py-4 transition hover:bg-surface-2" style={`--d:${i * 60}ms`}>
+              <span class="hidden w-12 shrink-0 font-mono text-sm text-faint sm:inline">{a.year}</span>
+              <span
+                class:list={[
+                  'grid size-9 shrink-0 place-items-center rounded-lg border',
+                  a.highlight ? 'border-accent/40 bg-accent-soft text-accent' : 'border-line text-muted',
+                ]}
+              >
+                <Icon name="trophy" size={17} />
+              </span>
+              <span class="min-w-0 flex-1 text-sm font-medium text-pretty sm:text-base">
+                <span class="mb-0.5 block font-mono text-xs text-faint sm:hidden">{a.year}</span>
+                {a.title[lang]}
+              </span>
+              <span
+                class:list={[
+                  'max-w-[45%] rounded-2xl px-2.5 py-1 text-right font-mono text-[0.7rem] leading-snug sm:max-w-none',
+                  a.highlight ? 'bg-accent text-accent-fg' : 'border border-line text-muted',
+                ]}
+              >
+                {a.result[lang]}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="reveal" style="--d:120ms">
+        <h3 class="mb-4 flex items-center gap-2.5 text-sm font-semibold tracking-wide text-muted uppercase">
+          <Icon name="award" size={18} class="text-accent" />
+          {t('awards.certs')}
+        </h3>
+        <ul class="space-y-3">
+          {
+            certifications.map((c) => (
+              <li class="card flex items-start gap-3 p-4">
+                <Icon name="check" size={18} class="mt-0.5 shrink-0 text-accent" />
+                <div>
+                  <p class="text-sm font-medium">{c.title[lang]}</p>
+                  <p class="mt-0.5 font-mono text-xs text-faint">{c.issuer}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="card mt-6 grid grid-cols-2 divide-x divide-line">
+          <div class="p-5">
+            <p class="font-mono text-4xl font-semibold text-accent" data-count={finals} data-suffix="×">{finals}×</p>
+            <p class="mt-2 text-xs leading-snug text-faint">{t('awards.finals')}</p>
+          </div>
+          <div class="p-5">
+            <p class="font-mono text-4xl font-semibold text-accent" data-count="4">4</p>
+            <p class="mt-2 text-xs leading-snug text-faint">{t('awards.teams')}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

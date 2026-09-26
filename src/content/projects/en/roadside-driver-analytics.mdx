@@ -1,0 +1,52 @@
+---
+title: 'Roadside Driver-Behaviour Analytics'
+description: 'TEKNOFEST 2026 smart road safety: YOLO11, ALPR and pose geometry identify a vehicle and detect driver violations from a single night-time pass through the windshield, with zero false positives.'
+---
+
+## The problem
+
+A roadside camera sees a car for a few seconds, at night, through the windshield. From that single pass the system has to **identify the vehicle** (body type, plate, colour) and **detect driver-caused road-safety violations**: phone use, smoking, passengers, objects on the dashboard, slalom driving. Built for TEKNOFEST 2026 *5G & AI Smart Road Safety* with team BiDatalar.
+
+One rule guided every design decision:
+
+> **Nothing that cannot be proven is reported.** A false detection costs more than a missed one.
+
+## Architecture
+
+<Figure src="/media/roadside/pipeline.svg" alt="Inference pipeline: normalisation, YOLO11 detection and tracking, main-vehicle gate, six parallel evidence heads (plate, body type, colour, driver action, passengers and cabin objects, slalom), evidence aggregation and results.json" caption="Every head is independent and every decision is voted across the whole video, so single-frame noise never reaches the output." paper={false} />
+
+## Three design decisions worth explaining
+
+**1. Driver action: geometry instead of a trained classifier.** The trained classifier said `smoking` with ~99% confidence on all three test videos, and produced `seatbelt violation` at ~1.0 confidence when the driver left the frame. It was confidently wrong on out-of-distribution input. Instead, the wrist is placed in a nose-centred coordinate frame **normalised by face scale**:
+
+| | lateral (x) | vertical (y) | meaning |
+| --- | --- | --- | --- |
+| phone | **0.83** | 0.74 | hand beside the head, at ear level |
+| cigarette | 0.02 | 1.14 | hand in front of the face, at mouth level |
+| no action | 0.06 | **1.57** | hands on the wheel, far below the face |
+
+Physically motivated, explainable and robust to domain shift. If the driver’s face cannot be read, **no action is reported**.
+
+**2. Slalom: detrend the trajectory.** As a car approaches and passes, its centre naturally traces a big arc that raw oscillation mistook for slalom. A degree-2 polynomial is fitted and removed, and the remaining lateral RMS is measured **in vehicle-width units**: straight driving 0.035–0.046, weaving **0.091**.
+
+**3. Cabin mascot: synthetic domain adaptation.** In the public dataset the mascot fills 27% of the image; in the real scene it is a thousandth of the cabin. Crops were composited into real in-cabin scenes as **small, dark, blurred, soft-edged** objects to create 2,500 synthetic samples, plus a geometric guard against brake lights.
+
+## Results
+
+<Figure src="/media/roadside/results.svg" alt="Precision, recall and F1 by category: driver action 1.00/1.00/1.00, cabin objects 1.00/0.50/0.67, passengers 1.00/0.33/0.50, overall 1.00/0.62/0.77" caption="Three sample videos against hand-verified reference labels. Precision is 1.00 in every category." paper={false} />
+
+Vehicle info: colour 3/3, body type 2/3, plate 2/3. On the third plate the system **deliberately abstained** because of the angled shot, returning `null` instead of inventing one.
+
+## How it got there
+
+| Issue | Before | After |
+| --- | --- | --- |
+| Driver action | 7 of 10 detections wrong (P ≈ 0.30), contradictory labels | **P = 1.00, R = 1.00** |
+| Cabin mascot | never detected even when clearly visible (0.10 conf.) | detected (up to 0.82) |
+| Passengers | the driver counted as “front passenger” | driver excluded |
+| Body type | a C-SUV called “sedan” at 99.8% | 2/3 correct |
+| Slalom | disabled (false positives) | detected |
+
+## Delivery
+
+An offline **Docker image on CUDA 12.1** with embedded weights, a normalisation layer (CLAHE + gamma) and adaptive frame stride. It writes a JSON result validated against the committee’s schema. It is always written, even when every head abstains.

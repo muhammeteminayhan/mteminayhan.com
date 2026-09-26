@@ -1,0 +1,38 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Icon from './Icon.astro';
+import type { Lang } from '@/i18n/ui';
+import { formatDate, localizePath, readingTime, useT } from '@/i18n/utils';
+import { slugOf } from '@/lib/content';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  lang: Lang;
+  delay?: number;
+}
+const { post, lang, delay = 0 } = Astro.props;
+const t = useT(lang);
+const href = localizePath(lang, `/blog/${slugOf(post.id)}/`);
+const minutes = readingTime(post.body ?? '');
+---
+
+<article class="reveal card group relative p-6 transition hover:border-line-strong" style={`--d:${delay}ms`}>
+  <p class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-faint">
+    <time datetime={post.data.pubDate.toISOString()}>{formatDate(lang, post.data.pubDate)}</time>
+    <span aria-hidden="true">·</span>
+    <span>{minutes} {t('blog.minRead')}</span>
+  </p>
+  <h3 class="mt-3 text-xl font-semibold tracking-tight text-balance transition group-hover:text-accent">
+    <a href={href} class="after:absolute after:inset-0">{post.data.title}</a>
+  </h3>
+  <p class="mt-3 leading-relaxed text-muted text-pretty">{post.data.description}</p>
+  <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+    <ul class="flex flex-wrap gap-1.5">
+      {post.data.tags.map((tag) => <li class="chip">{tag}</li>)}
+    </ul>
+    <span class="inline-flex items-center gap-1.5 text-sm font-medium text-accent">
+      {t('blog.read')}
+      <Icon name="arrow" size={15} class="transition group-hover:translate-x-1" />
+    </span>
+  </div>
+</article>

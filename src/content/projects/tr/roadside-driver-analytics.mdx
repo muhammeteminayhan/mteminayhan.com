@@ -1,0 +1,52 @@
+---
+title: 'Yol Kenarı Sürücü Davranışı Analizi'
+description: 'TEKNOFEST 2026 akıllı yol güvenliği: YOLO11, plaka tanıma ve poz geometrisi, tek bir gece geçişinde ön cam ardından aracı tanımlayıp sürücü ihlallerini sıfır yanlış pozitifle tespit ediyor.'
+---
+
+## Problem
+
+Yol kenarındaki bir kamera bir aracı birkaç saniye görür; gece, ön camın ardından. Bu tek geçişten sistemin **aracı tanımlaması** (gövde tipi, plaka, renk) ve **sürücü kaynaklı yol güvenliği ihlallerini** tespit etmesi gerekiyor: telefon kullanımı, sigara, yolcular, torpidodaki nesneler, slalom sürüş. BiDatalar takımıyla TEKNOFEST 2026 *5G & Yapay Zekâ ile Akıllı Yol Güvenliği* için geliştirildi.
+
+Her tasarım kararına tek bir kural yön verdi:
+
+> **Kanıtlanamayan hiçbir şey raporlanmaz.** Yanlış bir tespit, eksik bir tespitten daha pahalıdır.
+
+## Mimari
+
+<Figure src="/media/roadside/pipeline.svg" alt="Çıkarım hattı: normalizasyon, YOLO11 tespit ve takip, ana araç kapısı, altı paralel kanıt başlığı (plaka, gövde tipi, renk, sürücü eylemi, yolcular ve kabin nesneleri, slalom), kanıt birleştirme ve results.json" caption="Her başlık bağımsız ve her karar tüm video boyunca oylanıyor; tek karelik gürültü asla çıktıya ulaşmıyor." paper={false} />
+
+## Açıklamaya değer üç tasarım kararı
+
+**1. Sürücü eylemi: eğitilmiş sınıflandırıcı yerine geometri.** Eğitilmiş sınıflandırıcı, üç test videosunun üçünde de ~%99 güvenle `sigara` diyordu; sürücü kadrajdan çıktığında ise ~1,0 güvenle `emniyet kemeri ihlali` üretiyordu. Dağıtım dışı girdide kendinden emin biçimde yanılıyordu. Bunun yerine bilek, **yüz ölçeğine göre normalize edilmiş**, burun merkezli bir koordinat çerçevesine yerleştiriliyor:
+
+| | yanal (x) | dikey (y) | anlamı |
+| --- | --- | --- | --- |
+| telefon | **0,83** | 0,74 | el başın yanında, kulak hizasında |
+| sigara | 0,02 | 1,14 | el yüzün önünde, ağız hizasında |
+| eylem yok | 0,06 | **1,57** | eller direksiyonda, yüzün çok altında |
+
+Fiziksel olarak anlamlı, açıklanabilir ve alan farkına dayanıklı. Sürücünün yüzü okunamıyorsa **hiçbir eylem raporlanmıyor**.
+
+**2. Slalom: yörüngenin trendi gideriliyor.** Araç yaklaşıp geçerken merkezi doğal olarak büyük bir yay çiziyor; ham salınım bunu slalom sanıyordu. Yörüngeye 2. derece polinom oturtulup çıkarılıyor ve kalan yanal RMS **araç genişliği biriminde** ölçülüyor: düz seyir 0,035–0,046, yalpalayan sürüş **0,091**.
+
+**3. Kabin maskotu: sentetik alan uyarlaması.** Açık veri setinde maskot görüntünün %27’sini kaplıyor; gerçek sahnede ise kabinin binde biri kadar. Kırpıntılar gerçek araç içi sahnelere **küçük, karanlık, bulanık ve yumuşak kenarlı** nesneler olarak kompozit edilerek 2.500 sentetik örnek üretildi; stop lambalarına karşı ek bir geometrik koruma da var.
+
+## Sonuçlar
+
+<Figure src="/media/roadside/results.svg" alt="Kategori bazında precision, recall ve F1: sürücü eylemi 1,00/1,00/1,00; kabin nesneleri 1,00/0,50/0,67; yolcular 1,00/0,33/0,50; toplam 1,00/0,62/0,77" caption="Üç örnek video, elle doğrulanmış referans etiketlere karşı. Precision her kategoride 1,00." paper={false} />
+
+Araç bilgisi: renk 3/3, gövde tipi 2/3, plaka 2/3. Üçüncü plakada sistem açılı çekim nedeniyle **bilinçli olarak çekimser kaldı**; uydurmak yerine `null` döndürdü.
+
+## Bu noktaya nasıl gelindi
+
+| Sorun | Önce | Sonra |
+| --- | --- | --- |
+| Sürücü eylemi | 10 tespitin 7’si yanlış (P ≈ 0,30), çelişkili etiketler | **P = 1,00, R = 1,00** |
+| Kabin maskotu | panoda net dururken hiç tespit edilmiyordu (0,10 güven) | tespit ediliyor (0,82’ye kadar) |
+| Yolcular | sürücü “ön koltuk yolcusu” sayılıyordu | sürücü hariç tutuluyor |
+| Gövde tipi | bir C-SUV’a %99,8 güvenle “sedan” | 2/3 doğru |
+| Slalom | devre dışıydı (yanlış pozitif) | tespit ediliyor |
+
+## Teslimat
+
+Gömülü ağırlıklarla **CUDA 12.1 üzerinde çevrimdışı çalışan bir Docker imajı**; normalizasyon katmanı (CLAHE + gamma) ve uyarlanabilir kare adımı. Komitenin şemasına göre doğrulanmış bir JSON sonucu yazıyor; tüm başlıklar çekimser kalsa bile bu dosya her zaman yazılıyor.

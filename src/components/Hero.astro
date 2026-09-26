@@ -1,0 +1,124 @@
+---
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import portrait from '@/assets/me/portrait.jpg';
+import { heroRoles, profile } from '@/data/profile';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const roles = heroRoles[lang];
+---
+
+<section class="relative isolate overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24 lg:min-h-[92vh]" aria-labelledby="hero-title">
+  <!-- ambient layers -->
+  <div class="bg-grid absolute inset-0 -z-20 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" aria-hidden="true"></div>
+  <div class="glow -z-20 top-[-10%] left-[-10%] size-[28rem] bg-accent/15" aria-hidden="true"></div>
+  <div class="glow -z-20 right-[-8%] bottom-[-10%] size-[26rem] bg-cyan/10 [animation-delay:-6s]" aria-hidden="true"></div>
+  <canvas data-particles class="absolute inset-0 -z-10 size-full" aria-hidden="true"></canvas>
+
+  <div class="container-page grid items-center gap-12 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
+    <div>
+      <p class="reveal mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/70 px-3 py-1.5 text-xs text-muted backdrop-blur">
+        <span class="relative flex size-2">
+          <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60"></span>
+          <span class="relative inline-flex size-2 rounded-full bg-emerald-400"></span>
+        </span>
+        {t('hero.status')}
+      </p>
+
+      <h1 id="hero-title" class="reveal text-4xl leading-[1.05] font-bold tracking-tight sm:text-6xl lg:text-7xl" style="--d:80ms">
+        <span class="block text-lg font-medium tracking-normal text-muted sm:text-xl">{t('hero.hi')}</span>
+        <span class="text-gradient">{profile.name}</span>
+      </h1>
+
+      <p class="reveal mt-5 font-mono text-base text-muted sm:text-lg" style="--d:160ms">
+        <span class="text-faint">~/</span>{profile.title[lang]}
+        <span class="text-faint"> · </span>
+        <span data-typewriter data-words={JSON.stringify(roles)}>
+          <span class="sr-only">{roles.join(', ')}</span>
+          <span aria-hidden="true"><span class="text-accent" data-typewriter-text>{roles[0]}</span><span class="caret"></span></span>
+        </span>
+      </p>
+
+      <p class="reveal mt-8 max-w-xl text-xl leading-snug font-medium text-fg text-pretty sm:text-2xl" style="--d:240ms">
+        {t('hero.lead')}
+      </p>
+      <p class="reveal mt-4 max-w-xl leading-relaxed text-muted text-pretty" style="--d:300ms">{t('hero.sub')}</p>
+
+      <div class="reveal mt-9 flex flex-wrap items-center gap-3" style="--d:380ms">
+        <a
+          href={localizePath(lang, '/projects/')}
+          class="group inline-flex h-12 items-center gap-2 rounded-xl bg-accent px-5 font-semibold text-accent-fg shadow-[0_10px_30px_-10px_var(--accent)] transition hover:bg-accent-strong"
+        >
+          {t('hero.ctaProjects')}
+          <Icon name="arrow" size={18} class="transition group-hover:translate-x-0.5" />
+        </a>
+        <a
+          href={profile.cv}
+          download
+          class="inline-flex h-12 items-center gap-2 rounded-xl border border-line-strong bg-surface/60 px-5 font-medium backdrop-blur transition hover:border-accent hover:text-accent"
+        >
+          <Icon name="download" size={18} />
+          {t('hero.ctaCV')}
+        </a>
+        <div class="ml-1 flex items-center gap-1">
+          <a href={profile.github} target="_blank" rel="me noopener" class="grid size-12 place-items-center rounded-xl text-muted transition hover:bg-surface-2 hover:text-fg" aria-label="GitHub"><Icon name="github" size={20} /></a>
+          <a href={profile.linkedin} target="_blank" rel="me noopener" class="grid size-12 place-items-center rounded-xl text-muted transition hover:bg-surface-2 hover:text-fg" aria-label="LinkedIn"><Icon name="linkedin" size={20} /></a>
+          <a href={`mailto:${profile.email}`} class="grid size-12 place-items-center rounded-xl text-muted transition hover:bg-surface-2 hover:text-fg" aria-label="Email"><Icon name="mail" size={20} /></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- portrait -->
+    <div class="reveal relative mx-auto w-full max-w-sm lg:max-w-md" style="--d:200ms">
+      <div class="absolute -inset-4 rounded-[2rem] border border-line [mask-image:linear-gradient(to_bottom,black,transparent)]" aria-hidden="true"></div>
+      <div class="relative overflow-hidden rounded-[1.6rem] border border-line-strong bg-surface shadow-2xl">
+        <Image
+          src={portrait}
+          alt={t('hero.photoAlt')}
+          widths={[360, 540, 800]}
+          sizes="(min-width: 1024px) 28rem, (min-width: 640px) 24rem, 90vw"
+          loading="eager"
+          fetchpriority="high"
+          class="aspect-[4/5] w-full object-cover"
+        />
+        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pt-16">
+          <div class="flex items-center justify-between font-mono text-[0.7rem] text-white/80">
+            <span class="flex items-center gap-1.5"><Icon name="pin" size={13} />{profile.location[lang]}</span>
+            <span>TEKNOFEST · 2026</span>
+          </div>
+        </div>
+        <!-- corner brackets, like a detection box -->
+        <span class="pointer-events-none absolute top-3 left-3 size-6 border-t-2 border-l-2 border-accent" aria-hidden="true"></span>
+        <span class="pointer-events-none absolute top-3 right-3 size-6 border-t-2 border-r-2 border-accent" aria-hidden="true"></span>
+        <span class="pointer-events-none absolute right-3 bottom-12 size-6 border-r-2 border-b-2 border-accent" aria-hidden="true"></span>
+        <span class="pointer-events-none absolute bottom-12 left-3 size-6 border-b-2 border-l-2 border-accent" aria-hidden="true"></span>
+        <span class="absolute top-3 left-11 rounded bg-accent px-1.5 py-0.5 font-mono text-[0.65rem] font-semibold text-accent-fg">engineer · 0.99</span>
+      </div>
+    </div>
+  </div>
+
+  <a
+    href="#metrics"
+    class="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 font-mono text-[0.65rem] tracking-[0.2em] text-faint uppercase transition hover:text-muted lg:flex"
+  >
+    {t('hero.scroll')}
+    <span class="h-10 w-px overflow-hidden bg-line"><span class="block h-4 w-px animate-[scrollhint_1.8s_ease-in-out_infinite] bg-accent"></span></span>
+  </a>
+</section>
+
+<style is:global>
+  @keyframes scrollhint {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(250%);
+    }
+  }
+</style>

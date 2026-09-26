@@ -1,0 +1,34 @@
+---
+title: 'MACHINOVA: CFRP Yüzey Pürüzlülüğü Tahmini'
+description: 'TUSAŞ Lift Up bitirme projesi: Taguchi L9 deneyinde beş regresyon modeli, üç çapraz doğrulama şeması ve ANOVA. RSM modeli CV R² = 0,978’e ulaşıyor; masaüstü uygulaması, .exe ve REST API olarak teslim edildi.'
+---
+
+import app from '@/assets/projects/machinova/app.png';
+import comparison from '@/assets/projects/machinova/model-comparison.png';
+import surface from '@/assets/projects/machinova/response-surface.png';
+
+## Problem
+
+Karbon fiber takviyeli polimer (CFRP) havacılık parçalarının frezelenmesinde, parçanın kabul edilip edilmeyeceğine **yüzey pürüzlülüğü (Ra)** karar veriyor. Operatör üç parametre seçiyor: kesme hızı (Vc), ilerleme (fn) ve kesme derinliği (ap). **TUSAŞ Lift Up programındaki** bu bitirme projesi, kesmeden önce bu ayarlardan Ra’yı tahmin eden bir araç istiyordu. Dört makine mühendisiyle çalışan ekipteki tek bilgisayar mühendisi olarak istatistik, modeller ve yazılım benim sorumluluğumdaydı.
+
+## Veri
+
+**Taguchi L9** dik dizisi: 3 faktör × 3 seviye = 9 kombinasyon, her biri 14 tekrar; Ra’nın 0,882 ile 1,190 µm arasında olduğu toplam **126 ölçüm**. Her grubun 14 tekrarı hafif ve düzenli biçimde artıyor; bu, ardışık kesimlerde ilerleyen **takım aşınmasının** işareti. Veride kesim sırası bilgisi olmadığı için model her ayar için ortalama Ra’yı öğreniyor ve yayılım bir belirsizlik bandı olarak raporlanıyor (±0,024 µm ≈ 2σ).
+
+## Yöntem
+
+- **Önce istatistik:** Taguchi sinyal/gürültü (küçük-daha-iyi) ve ANOVA. **Kesme hızı, Ra’daki varyansın %83,2’sini açıklıyor.**
+- Sızıntıyı önleyen tek bir `StandardScaler` hattı içinde **beş regresyon modeli**: doğrusal taban, **2. derece tepki yüzeyi (RSM) + RidgeCV**, Random Forest, SVR (RBF) ve bir MLP. Ridge önemli, çünkü L9 etkileşim terimlerini örtüştürüyor ve düz polinom regresyonu kötü koşullu hale getiriyor.
+- Modelin hiç görmediği ayarlarda da değerlendirilmesi için kombinasyon-dışı doğrulama dahil **üç doğrulama şeması**.
+
+<Figure src={comparison} alt="Beş regresyon modelinin 10 katlı ve kombinasyon-dışı çapraz doğrulamadaki R² değerlerini karşılaştıran çubuk grafik" caption="Beş model, doğrulama şemalarından ikisi." />
+
+RSM modeli seçildi: doğruluğu en iyiyle eşdeğer, üstelik test edilen seviyeler arasında random forest’ın veremeyeceği **pürüzsüz bir interpolasyon** sağlıyor. Skorları: **CV R² = 0,978** ve **RMSE = 0,012 µm**.
+
+<Figure src={surface} alt="Sabit kesme derinliğinde kesme hızı ve ilerlemeye göre tahmini Ra’nın 3B tepki yüzeyi" caption="RSM tepki yüzeyi: kesme hızı ve ilerlemeye göre tahmini Ra (ap = 1,5 mm)." />
+
+## Teslimat
+
+<Figure src={app} alt="MACHINOVA masaüstü uygulaması: kesme hızı, ilerleme ve kesme derinliği girdileri ve 0,902 µm tahmini Ra" caption="Operatörlerin kullandığı MACHINOVA karar destek uygulaması." />
+
+Model üç biçimde teslim edildi: bir **CustomTkinter masaüstü uygulaması**, Python kurulu olmayan atölye bilgisayarları için **tek dosya .exe** (PyInstaller) ve entegrasyon için bir **Flask REST API** (`POST /predict`). Makale için 14 şekil ve 9 tablonun tamamı tek bir analiz betiğiyle yeniden üretiliyor.

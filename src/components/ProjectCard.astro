@@ -1,0 +1,166 @@
+---
+import { Image } from 'astro:assets';
+import CoverArt from './CoverArt.astro';
+import Icon from './Icon.astro';
+import { categories, type Project } from '@/data/projects';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useT } from '@/i18n/utils';
+
+interface Props {
+  project: Project;
+  lang: Lang;
+  variant?: 'featured' | 'compact';
+  delay?: number;
+  headingLevel?: 'h2' | 'h3' | 'h4';
+}
+const { project: p, lang, variant = 'compact', delay = 0, headingLevel: H = 'h3' } = Astro.props;
+const t = useT(lang);
+const featured = variant === 'featured';
+const caseHref = p.caseStudy ? localizePath(lang, `/projects/${p.slug}/`) : undefined;
+const primaryHref = caseHref ?? p.repo;
+const primaryExternal = !caseHref && !!p.repo;
+const catLabel = categories.find((c) => c.id === p.categories[0])?.label[lang];
+const year = p.date.slice(0, 4);
+
+const cover = p.cover;
+const isImage = typeof cover === 'object';
+---
+
+<div class="reveal h-full min-w-0" style={`--d:${delay}ms`} data-categories={p.categories.join(' ')}>
+<article
+  class="card group relative flex h-full flex-col overflow-hidden transition-colors duration-300 hover:border-line-strong"
+  data-tilt={featured ? '' : undefined}
+>
+  <!-- cursor spotlight -->
+  <div
+    class="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+    style="background: radial-gradient(420px circle at var(--mx,50%) var(--my,0%), color-mix(in srgb, var(--accent) 9%, transparent), transparent 60%);"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class:list={['relative overflow-hidden border-b border-line', featured ? 'aspect-[16/9]' : 'aspect-[16/8]']}>
+    {
+      isImage ? (
+        <div class:list={['size-full', p.coverOnPaper ? 'bg-paper p-3' : 'bg-surface-2']}>
+          <Image
+            src={cover}
+            alt=""
+            widths={[400, 640, 900]}
+            sizes="(min-width: 1024px) 34rem, (min-width: 640px) 50vw, 100vw"
+            class:list={[
+              'size-full transition duration-700 group-hover:scale-[1.04]',
+              p.coverOnPaper ? 'object-contain' : 'object-cover object-top',
+            ]}
+          />
+        </div>
+      ) : typeof cover === 'string' ? (
+        <img
+          src={cover}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          class="size-full bg-paper object-cover object-top transition duration-700 group-hover:scale-[1.04]"
+        />
+      ) : (
+        <CoverArt category={p.categories[0]} glyph={p.glyph ?? p.title.en.slice(0, 2)} art={p.art} />
+      )
+    }
+    <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+      <span class="rounded-md border border-white/10 bg-black/60 px-2 py-0.5 font-mono text-[0.65rem] tracking-wide text-white uppercase backdrop-blur">
+        {catLabel}
+      </span>
+      {
+        p.private && (
+          <span class="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/60 px-2 py-0.5 font-mono text-[0.65rem] text-white backdrop-blur">
+            <Icon name="lock" size={11} />
+            private
+          </span>
+        )
+      }
+    </div>
+  </div>
+
+  <div class:list={['flex flex-1 flex-col', featured ? 'p-6' : 'p-5']}>
+    <p class="mb-2 flex min-w-0 items-center gap-2 font-mono text-[0.7rem] text-faint">
+      <span>{year}</span>
+      {p.context && <span aria-hidden="true">·</span>}
+      {p.context && <span class="min-w-0 truncate">{p.context[lang]}</span>}
+    </p>
+    <H class:list={['font-semibold tracking-tight text-balance', featured ? 'text-xl' : 'text-lg']}>
+      {
+        primaryHref ? (
+          <a
+            href={primaryHref}
+            target={primaryExternal ? '_blank' : undefined}
+            rel={primaryExternal ? 'noopener' : undefined}
+            class="after:absolute after:inset-0 after:z-20 focus-visible:outline-none"
+          >
+            {p.title[lang]}
+          </a>
+        ) : (
+          p.title[lang]
+        )
+      }
+    </H>
+    <p class:list={['mt-2.5 text-sm leading-relaxed text-muted', featured ? '' : 'line-clamp-3']}>{p.summary[lang]}</p>
+
+    {
+      featured && p.metrics && (
+        <dl class="mt-5 grid grid-cols-3 gap-2">
+          {p.metrics.map((m) => (
+            <div class="rounded-lg border border-line bg-surface-2 px-2.5 py-2">
+              <dt class="sr-only">{m.label[lang]}</dt>
+              <dd class="font-mono text-sm font-semibold text-fg">{m.value}</dd>
+              <dd class="mt-0.5 text-[0.68rem] leading-tight text-faint">{m.label[lang]}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+    {
+      !featured && p.metrics?.[0] && (
+        <p class="mt-3 font-mono text-xs text-accent">
+          {p.metrics[0].value} <span class="text-faint">· {p.metrics[0].label[lang]}</span>
+        </p>
+      )
+    }
+
+    <ul class="mt-4 flex flex-wrap gap-1.5" aria-label={t('projects.stack')}>
+      {p.stack.slice(0, featured ? 6 : 4).map((s) => <li class="chip">{s}</li>)}
+    </ul>
+
+    <div class="mt-auto flex items-center gap-4 pt-5 text-sm">
+      {
+        caseHref && (
+          <span class="inline-flex items-center gap-1.5 font-medium text-accent">
+            {t('projects.caseStudy')}
+            <Icon name="arrow" size={15} class="transition group-hover:translate-x-1" />
+          </span>
+        )
+      }
+      {
+        p.repo && (
+          <a
+            href={p.repo}
+            target="_blank"
+            rel="noopener"
+            class="relative z-30 inline-flex items-center gap-1.5 text-muted transition hover:text-fg"
+          >
+            <Icon name="github" size={15} />
+            {t('projects.code')}
+          </a>
+        )
+      }
+      {
+        p.private && (
+          <span class="inline-flex items-center gap-1.5 text-faint">
+            <Icon name="lock" size={14} />
+            {t('projects.private')}
+          </span>
+        )
+      }
+    </div>
+  </div>
+</article>
+</div>

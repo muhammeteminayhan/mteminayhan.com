@@ -1,0 +1,21 @@
+# build output
+dist/
+# generated types
+.astro/
+# vercel
+.vercel/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+
+# environment variables — never commit (contains GitHub token)
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/

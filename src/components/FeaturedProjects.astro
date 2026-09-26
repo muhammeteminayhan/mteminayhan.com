@@ -1,0 +1,38 @@
+---
+import Icon from './Icon.astro';
+import ProjectCard from './ProjectCard.astro';
+import SectionHeading from './SectionHeading.astro';
+import { featuredProjects, projects } from '@/data/projects';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<section id="projects" class="relative py-20 sm:py-28" aria-labelledby="projects-title">
+  <div class="container-page">
+    <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <SectionHeading
+        id="projects-title"
+        eyebrow={t('projects.eyebrow')}
+        title={t('projects.featuredTitle')}
+        lead={t('projects.featuredLead')}
+      />
+      <a
+        href={localizePath(lang, '/projects/')}
+        class="reveal mb-10 inline-flex shrink-0 items-center gap-2 self-start rounded-xl border border-line px-4 py-2.5 text-sm transition hover:border-accent hover:text-accent sm:mb-12 sm:self-auto"
+      >
+        {t('projects.viewAll')} <span class="font-mono text-faint">({projects.length})</span>
+        <Icon name="arrow" size={16} />
+      </a>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      {featuredProjects.map((p, i) => <ProjectCard project={p} lang={lang} variant="featured" delay={(i % 2) * 90} />)}
+    </div>
+  </div>
+</section>

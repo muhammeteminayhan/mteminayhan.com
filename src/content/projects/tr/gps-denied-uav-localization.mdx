@@ -1,0 +1,71 @@
+---
+title: 'GPS’siz İHA Konumlandırma'
+description: 'Sabit kanatlı bir İHA için nöral ölü hesap: GPS içermeyen 19 sensör kanalıyla çalışan LSTM, GPS olmadan 4,5 dakika sonra ~85 m içinde; klasik ölü hesaptan yaklaşık 38 kat iyi.'
+---
+
+import route from '@/assets/projects/gps-denied-uav-localization/route.png';
+import errorVsTime from '@/assets/projects/gps-denied-uav-localization/error-vs-time.png';
+import comparison from '@/assets/projects/gps-denied-uav-localization/model-comparison.png';
+
+## Problem
+
+GNSS, çoğu İHA navigasyon yığınının tek hata noktası. Karıştırma (jamming) ve aldatma (spoofing) ucuz; alıcı kilidi kendiliğinden de kaybedebilir. Bu olduğunda hava aracının yine de nerede olduğunu bilmesi gerekir.
+
+Klasik ataletsel ölü hesap, ivmeölçer okumalarını iki kez integre eder; tüketici sınıfı MEMS sensörlerde bu, hatanın karesini alır ve dakikalar içinde kilometrelerce sapma demektir. Bu proje, gerçek uçuşlarla eğitilmiş bir sinir ağının **aynı sensörlerle** daha iyisini yapıp yapamayacağını, GPS yokken enlem, boylam ve irtifayı kestirip kestiremeyeceğini soruyor.
+
+**Katı kısıt:** GNSS’ten türetilmiş hiçbir değer modele ulaşamaz. GPS yalnızca eğitim hedefi ve puanlamada kullanılan gerçek referans olarak yer alır.
+
+## Yaklaşım: nöral ölü hesap
+
+Sabit bir parkurda mutlak konumu regresyonla tahmin etmek, rotayı ezberlemekten öteye geçmez. Bunun yerine model, hava aracının **ne kadar yer değiştirdiğini** tahmin ediyor:
+
+```
+son 5 sn sensör verisi (50 adım × 19 öznitelik)  ──▶  son 1 sn’deki yer değiştirme (ΔE, ΔN, ΔU)
+```
+
+Kesinti boyunca bu yer değiştirmeler bilinen son konuma eklenir. Her tahmin tam olarak bir öncekinden bu yana geçen saniyeyi kapsadığı için toplam teleskopiktir: çift sayım da boşluk da yok.
+
+İrtifa özel bir durum: model onu *öğrenebilir*, ama barometre onu doğrudan **ölçer** ve ölçmek tahmin etmekten iyidir. Düşey kanalı barometreden almak, yeniden eğitim olmadan düşey hatayı 2,57 m’den **1,40 m’ye** indiriyor (−%45).
+
+## En önemli bulgu: gizli bir GPS sızıntısı
+
+Telemetri kaydında “GPS” adlı bir kolon yok. Ama `attitude[2]`, yani hava aracının yaw açısı var ve masum bir yönelim sinyali gibi görünüyor. Değil: uçuş kontrolcüsü yaw’ı **GPS yer rotası** ile birleştiriyor. 102 turda ikisi arasındaki medyan fark yaklaşık 6°; yani yaw’ı modele vermek GPS yönünü arka kapıdan içeri sokup her sonucu şişirirdi.
+
+Yaw yasaklandı; `nav*` (GPS ile birleştirilmiş kestirimler), `wind*` (GPS yer hızından türetilmiş) ve konum kontrolcüsü terimleri de. Geriye **gerçekten GPS’siz 19 öznitelik** kaldı. Bu denetim, güvenilebilecek bir sayı ile güvenilemeyecek bir sayı arasındaki fark.
+
+## Sonuçlar
+
+Her turun %40’ından itibaren tam GPS kaybı (~4,5 dakika ölü hesap), ayrılmış 17 test turunun medyanı:
+
+| Yöntem | Ortalama hata (ATE) | Son hata (FDE) | Düşey |
+| --- | --- | --- | --- |
+| **LSTM** (ana model) | **44,4 m** | **85,1 m** | barometreyle **1,40 m** |
+| GRU | 59,7 m | 93,9 m | 3,84 m |
+| TCN | 65,8 m | 144,9 m | 3,00 m |
+| MLP | 73,6 m | 124,1 m | 4,24 m |
+| Son konumu tut | 328,8 m | 515,4 m | 40,21 m |
+| Sabit hız | 1645,7 m | 3188,6 m | 100,64 m |
+
+<Figure src={route} alt="Bir turun haritası: GPS varken gerçek rota, GPS kaybolduktan sonraki gerçek rota ve yalnızca sensörlerle tahmin edilen, gerçeği yakından izleyen kesikli rota" caption="Tur 103: GPS olmadan 5,2 dakika, 85 m son hata. Yeşil hava aracının gittiği yer; turuncu sistemin olduğunu düşündüğü yer." />
+
+Gerçekçi karıştırma senaryosu olan kısa kesintiler, ana sayıdan çok daha iyi: **10 sn sonra 11,7 m**, 30 sn sonra 25,8 m, tam bir dakika sonra 22,9 m.
+
+<Figure src={errorVsTime} alt="Her model için kesinti süresiyle büyüyen konum hatası; en düşük LSTM" caption="Kesinti boyunca hatanın büyümesi. Dizi modelleri hareketi takip ediyor; aynı pencereyi zaman sırası olmadan gören MLP etmiyor." />
+
+<Figure src={comparison} alt="LSTM, GRU, TCN, MLP ve iki klasik taban çizgisinin ATE ve FDE karşılaştırması" caption="Ayrılmış turlarda model karşılaştırması." />
+
+**Gerçek zaman:** tek bir konum güncellemesi **CPU’da ≈1 ms** sürüyor, yani bir saniyelik bütçenin binde biri. Akış (streaming) uygulaması toplu uygulamayla 10 µm içinde örtüşüyor. Modeller TorchScript’e aktarılıyor.
+
+## İşe yaramayanlar
+
+Öğretici oldukları için saklanan olumsuz sonuçlar:
+
+- **Çevrimiçi kalibrasyon** (kesintiden önce afin düzeltme uydurmak) *zarar verdi*: FDE 85 m → 119 m. Hata dünya çerçevesinde sabit değil; hava aracıyla birlikte dönüyor.
+- **Yörünge (rollout) kaybı** kendi eşleşik tabanını ~%17 geçti ama yoğun örneklenmiş tek adımlı modele yine yenildi.
+- **Yalnızca manyetometre yönü**, kusursuz hızla bile 278 m veriyor. Modelin 19 girdiyi örtük olarak birleştirmesi çok daha iyi.
+
+Hata ayrıştırması tavanı açıklıyor: yön 2,6° (yansız), hız %1,6 sapıyor ve ikisi kabaca eşit katkı veriyor. Bir sonraki gerçek kazanç yeni bir sensör gerektiriyor; hava hızı probu veya kamera. [Görsel odometri](/tr/projects/aerial-ai-visual-odometry/) tam da burada devreye giriyor.
+
+## Veri ve yeniden üretilebilirlik
+
+Zenodo’da açık erişimli veri seti ([10.5281/zenodo.16992975](https://doi.org/10.5281/zenodo.16992975)): 3.981 m’lik bir parkurda ~111 tur atan sabit kanatlı bir İHA; iNav uçuş kontrolcüsüyle 61,7 Hz telemetri ve 5 Hz GPS kaydı. Kalite kontrollerinden 102 tur geçiyor. Eğitilmiş dört model depoda olduğu için değerlendirme yukarıdaki tabloyu birebir yeniden üretiyor.

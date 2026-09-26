@@ -1,0 +1,164 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import { getImage } from 'astro:assets';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/Icon.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import Figure from '@/components/mdx/Figure.astro';
+import Video from '@/components/mdx/Video.astro';
+import Callout from '@/components/mdx/Callout.astro';
+import Stats from '@/components/mdx/Stats.astro';
+import { categories, featuredProjects, type Project } from '@/data/projects';
+import { profile } from '@/data/profile';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+  project: Project;
+  entry: CollectionEntry<'projects'>;
+}
+const { lang, project: p, entry } = Astro.props;
+const t = useT(lang);
+const { Content } = await render(entry);
+
+const catLabels = p.categories.map((id) => categories.find((c) => c.id === id)?.label[lang]).filter(Boolean);
+const others = featuredProjects.filter((o) => o.slug !== p.slug).slice(0, 3);
+const cover = typeof p.cover === 'object' ? p.cover : undefined;
+const ogImage = cover
+  ? (await getImage({ src: cover, width: 1200, height: 630, fit: 'contain', background: '#ffffff', format: 'png' })).src
+  : undefined;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: p.title[lang],
+  description: entry.data.description,
+  author: { '@type': 'Person', name: profile.name, url: profile.site },
+  inLanguage: lang,
+  ...(p.repo ? { codeRepository: p.repo } : {}),
+  keywords: p.stack.join(', '),
+};
+---
+
+<BaseLayout lang={lang} title={entry.data.title} description={entry.data.description} type="article" image={ogImage} jsonLd={jsonLd}>
+  <article class="relative isolate overflow-x-clip">
+    <div class="bg-grid absolute inset-x-0 top-0 -z-10 h-[32rem] [mask-image:linear-gradient(to_bottom,black,transparent)]" aria-hidden="true"></div>
+    <div class="glow -z-10 top-[-8rem] right-[-6rem] size-[26rem] bg-accent/10" aria-hidden="true"></div>
+
+    <header class="container-page pt-28 sm:pt-36">
+      <a
+        href={localizePath(lang, '/projects/')}
+        class="reveal inline-flex items-center gap-2 text-sm text-muted transition hover:text-accent"
+      >
+        <Icon name="arrow-left" size={16} />
+        {t('projects.back')}
+      </a>
+
+      <div class="mt-8 max-w-3xl">
+        <p class="reveal eyebrow flex flex-wrap gap-x-3 gap-y-1">
+          {catLabels.map((c) => <span>{c}</span>)}
+          {p.private && <span class="inline-flex items-center gap-1 text-faint"><Icon name="lock" size={12} />private</span>}
+        </p>
+        <h1 class="reveal mt-4 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-5xl" style="--d:60ms">
+          {p.title[lang]}
+        </h1>
+        <p class="reveal mt-5 text-lg leading-relaxed text-muted text-pretty" style="--d:120ms">{p.summary[lang]}</p>
+      </div>
+
+      <dl class="reveal mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4" style="--d:180ms">
+        {
+          p.role && (
+            <div class="bg-surface p-4">
+              <dt class="font-mono text-[0.7rem] tracking-wider text-faint uppercase">{t('projects.role')}</dt>
+              <dd class="mt-1.5 text-sm">{p.role[lang]}</dd>
+            </div>
+          )
+        }
+        {
+          p.context && (
+            <div class="bg-surface p-4">
+              <dt class="font-mono text-[0.7rem] tracking-wider text-faint uppercase">{t('projects.context')}</dt>
+              <dd class="mt-1.5 text-sm">{p.context[lang]}</dd>
+            </div>
+          )
+        }
+        <div class="bg-surface p-4">
+          <dt class="font-mono text-[0.7rem] tracking-wider text-faint uppercase">{t('projects.stack')}</dt>
+          <dd class="mt-1.5 text-sm">{p.stack.slice(0, 4).join(' · ')}</dd>
+        </div>
+        <div class="bg-surface p-4">
+          <dt class="font-mono text-[0.7rem] tracking-wider text-faint uppercase">{t('projects.links')}</dt>
+          <dd class="mt-1.5 text-sm">
+            {
+              p.repo ? (
+                <a href={p.repo} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-accent hover:underline">
+                  <Icon name="github" size={15} />
+                  {p.repo.replace('https://github.com/', '')}
+                </a>
+              ) : (
+                <span class="inline-flex items-center gap-1.5 text-muted">
+                  <Icon name="lock" size={14} />
+                  {t('projects.private')}
+                </span>
+              )
+            }
+          </dd>
+        </div>
+      </dl>
+
+      {
+        p.metrics && (
+          <div class="mt-4 grid grid-cols-3 gap-3">
+            {p.metrics.map((m, i) => (
+              <div class="reveal card p-4 sm:p-5" style={`--d:${220 + i * 60}ms`}>
+                <p class="font-mono text-xl font-semibold text-accent sm:text-3xl">{m.value}</p>
+                <p class="mt-1 text-xs text-faint sm:text-sm">{m.label[lang]}</p>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    <div class="container-page mt-4">
+      <div class="mx-auto mt-14 max-w-3xl pb-20">
+        {
+          p.private && (
+            <Callout tone="muted" title={t('projects.private')}>
+              <p>{t('projects.privateNote')}</p>
+            </Callout>
+          )
+        }
+        <div class="prose-custom">
+          <Content components={{ Figure, Video, Callout, Stats }} />
+        </div>
+
+        <div class="mt-14 flex flex-wrap gap-3 border-t border-line pt-8">
+          {
+            p.repo && (
+              <a href={p.repo} target="_blank" rel="noopener" class="inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 font-semibold text-accent-fg transition hover:bg-accent-strong">
+                <Icon name="github" size={18} />
+                {t('projects.code')}
+              </a>
+            )
+          }
+          <a href={`${localizePath(lang, '/')}#contact`} class="inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 font-medium transition hover:border-accent hover:text-accent">
+            <Icon name="mail" size={18} />
+            {t('hero.ctaContact')}
+          </a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <section class="border-t border-line bg-bg-soft/40 py-16 sm:py-20" aria-labelledby="more-title">
+    <div class="container-page">
+      <h2 id="more-title" class="reveal mb-8 text-2xl font-bold tracking-tight">{t('projects.more')}</h2>
+      <div class="grid gap-6 md:grid-cols-3">
+        {others.map((o, i) => <ProjectCard project={o} lang={lang} delay={i * 70} />)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

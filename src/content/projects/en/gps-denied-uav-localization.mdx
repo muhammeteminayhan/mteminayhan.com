@@ -1,0 +1,71 @@
+---
+title: 'GPS-Denied UAV Localization'
+description: 'Neural dead reckoning for a fixed-wing UAV: an LSTM on 19 GPS-free sensor channels stays within ~85 m after 4.5 minutes without GPS, about 38× better than classical dead reckoning.'
+---
+
+import route from '@/assets/projects/gps-denied-uav-localization/route.png';
+import errorVsTime from '@/assets/projects/gps-denied-uav-localization/error-vs-time.png';
+import comparison from '@/assets/projects/gps-denied-uav-localization/model-comparison.png';
+
+## The problem
+
+GNSS is the single point of failure in most UAV navigation stacks. Jamming and spoofing are cheap, and a receiver can also simply lose lock. When that happens the aircraft still needs to know where it is.
+
+Classical inertial dead reckoning integrates accelerometer readings twice, and on consumer-grade MEMS sensors that squares the error: kilometres of drift within minutes. This project asks whether a neural network trained on real flights can do better **from the same sensors**, and estimate latitude, longitude and altitude while GPS is gone.
+
+**The hard constraint:** no GNSS-derived value may ever reach the model. GPS appears only as the training target and as the ground truth it is scored against.
+
+## Approach: neural dead reckoning
+
+Regressing absolute position on a fixed circuit would just memorise the track. Instead the model predicts **how far the aircraft moved**:
+
+```
+last 5 s of sensors (50 steps × 19 features)  ──▶  displacement over the last 1 s (ΔE, ΔN, ΔU)
+```
+
+During an outage those displacements are summed onto the last known fix. Because each prediction covers exactly the second since the previous one, the sum telescopes, with no double counting and no gaps.
+
+Altitude is special: the model *can* learn it, but the barometer simply **measures** it, and measuring beats predicting. Taking the vertical channel from the barometer drops vertical error from 2.57 m to **1.40 m** (−45%) with no retraining.
+
+## The most important finding: a hidden GPS leak
+
+The telemetry has no column called “GPS”. It does contain `attitude[2]`, the aircraft’s yaw, which looks like an innocent orientation signal. It is not: the flight controller fuses yaw with **GPS ground course**. Across 102 laps the median difference between the two is about 6°, so feeding yaw to the model would smuggle GPS heading in through the side door and inflate every result.
+
+Yaw is banned, along with `nav*` (GPS-fused estimates), `wind*` (derived from GPS ground speed) and position-controller terms. What remains are **19 genuinely GPS-free features**. This audit is the difference between a number you can trust and one you cannot.
+
+## Results
+
+Full GPS loss from 40% into each lap (~4.5 minutes of dead reckoning), median over 17 held-out test laps:
+
+| Method | Mean error (ATE) | Final error (FDE) | Vertical |
+| --- | --- | --- | --- |
+| **LSTM** (main model) | **44.4 m** | **85.1 m** | **1.40 m** with barometer |
+| GRU | 59.7 m | 93.9 m | 3.84 m |
+| TCN | 65.8 m | 144.9 m | 3.00 m |
+| MLP | 73.6 m | 124.1 m | 4.24 m |
+| Hold last position | 328.8 m | 515.4 m | 40.21 m |
+| Constant velocity | 1645.7 m | 3188.6 m | 100.64 m |
+
+<Figure src={route} alt="Map of a lap: the true track while GPS is available, the true track after GPS is lost, and the dashed track predicted from sensors only, closely following the truth" caption="Lap 103: 5.2 minutes without GPS, 85 m final error. Green is where the aircraft went; orange is where the system thought it was." />
+
+Short outages, the realistic jamming case, are far more accurate than the headline: **11.7 m after 10 s**, 25.8 m after 30 s, 22.9 m after a full minute.
+
+<Figure src={errorVsTime} alt="Position error growing with outage duration for each model, with the LSTM lowest" caption="Error growth over the outage. Sequence models track motion; the MLP, which sees the same window without time order, does not." />
+
+<Figure src={comparison} alt="Bar chart comparing ATE and FDE across LSTM, GRU, TCN, MLP and two classical baselines" caption="Model comparison on the held-out laps." />
+
+**Real-time:** one position update costs **≈1 ms on a CPU**, a tenth of a percent of the one-second budget, and the streaming implementation agrees with the batch one to within 10 µm. Models are exported to TorchScript.
+
+## What did not work
+
+Negative results, kept because they were informative:
+
+- **Online calibration** (fitting an affine correction before the outage) *hurt*: FDE 85 m → 119 m. The error is not fixed in the world frame; it rotates with the aircraft.
+- **Trajectory (rollout) loss** beat its own matched baseline by ~17% but still lost to the densely sampled single-step model.
+- **Magnetometer heading alone**, even with perfect speed, gives 278 m. The model’s implicit fusion of all 19 inputs is much better.
+
+Error decomposition explains the ceiling: heading is off by 2.6° (unbiased) and speed by 1.6%, contributing roughly equally. The next real gain needs a new sensor, such as an airspeed probe or a camera, which is exactly where [visual odometry](/projects/aerial-ai-visual-odometry/) comes in.
+
+## Data & reproducibility
+
+Public, open-access dataset on Zenodo ([10.5281/zenodo.16992975](https://doi.org/10.5281/zenodo.16992975)): a fixed-wing UAV flying ~111 laps of a 3,981 m circuit, logged by an iNav flight controller at 61.7 Hz telemetry and 5 Hz GPS; 102 laps survive the quality checks. The four trained models are committed, so the evaluation reproduces the table above exactly.

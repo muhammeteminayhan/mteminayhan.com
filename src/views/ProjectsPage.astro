@@ -1,0 +1,79 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import SectionHeading from '@/components/SectionHeading.astro';
+import { categories, projects } from '@/data/projects';
+import type { Lang } from '@/i18n/ui';
+import { useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+
+// featured first, then newest
+const sorted = [...projects].sort(
+  (a, b) => Number(!!b.featured) - Number(!!a.featured) || b.date.localeCompare(a.date),
+);
+const counts = Object.fromEntries(
+  categories.map((c) => [c.id, projects.filter((p) => p.categories.includes(c.id)).length]),
+);
+---
+
+<BaseLayout lang={lang} title={t('projects.all')} description={t('projects.allLead')}>
+  <section class="relative isolate overflow-hidden pt-32 pb-20 sm:pt-40">
+    <div class="bg-grid absolute inset-x-0 top-0 -z-10 h-[28rem] [mask-image:linear-gradient(to_bottom,black,transparent)]" aria-hidden="true"></div>
+    <div class="container-page">
+      <SectionHeading as="h1" eyebrow={t('projects.eyebrow')} title={t('projects.allTitle')} lead={t('projects.allLead')} />
+
+      <div class="reveal mb-10 flex flex-wrap items-center gap-2" data-filter-root role="group" aria-label={t('projects.filter')}>
+        <button type="button" data-filter="all" aria-pressed="true" class="filter-btn">
+          {t('projects.filterAll')} <span class="font-mono text-faint">{projects.length}</span>
+        </button>
+        {
+          categories.map((c) => (
+            <button type="button" data-filter={c.id} aria-pressed="false" class="filter-btn">
+              {c.label[lang]} <span class="font-mono text-faint">{counts[c.id]}</span>
+            </button>
+          ))
+        }
+        <span class="ml-auto hidden font-mono text-xs text-faint sm:inline">
+          <span data-filter-count>{projects.length}</span> {t('projects.count')}
+        </span>
+      </div>
+
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {sorted.map((p, i) => <ProjectCard project={p} lang={lang} delay={(i % 3) * 70} headingLevel="h2" />)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding-inline: 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.875rem;
+    color: var(--muted);
+    transition: all 0.2s ease;
+  }
+  .filter-btn:hover {
+    border-color: var(--border-strong);
+    color: var(--fg);
+  }
+  .filter-btn[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+  }
+  .filter-btn[aria-pressed='true'] span {
+    color: inherit;
+    opacity: 0.7;
+  }
+</style>

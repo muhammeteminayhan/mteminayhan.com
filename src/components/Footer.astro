@@ -1,0 +1,53 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '@/data/profile';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-line">
+  <div class="container-page flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between">
+    <div class="space-y-1">
+      <p class="text-sm font-medium">{profile.name}</p>
+      <p class="text-xs text-faint">© {year} · {t('footer.built')}</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a
+        href={profile.github}
+        class="grid size-10 place-items-center rounded-xl border border-line text-muted transition hover:border-line-strong hover:text-fg"
+        aria-label="GitHub"
+        rel="me noopener"
+        target="_blank"><Icon name="github" size={18} /></a
+      >
+      <a
+        href={profile.linkedin}
+        class="grid size-10 place-items-center rounded-xl border border-line text-muted transition hover:border-line-strong hover:text-fg"
+        aria-label="LinkedIn"
+        rel="me noopener"
+        target="_blank"><Icon name="linkedin" size={18} /></a
+      >
+      <a
+        href={`mailto:${profile.email}`}
+        class="grid size-10 place-items-center rounded-xl border border-line text-muted transition hover:border-line-strong hover:text-fg"
+        aria-label="Email"><Icon name="mail" size={18} /></a
+      >
+      <a
+        href={localizePath(lang, '/rss.xml')}
+        class="grid size-10 place-items-center rounded-xl border border-line text-muted transition hover:border-line-strong hover:text-fg"
+        aria-label="RSS"><Icon name="rss" size={18} /></a
+      >
+      <a
+        href="#main"
+        class="ml-2 flex h-10 items-center gap-1.5 rounded-xl border border-line px-3 text-xs text-muted transition hover:border-line-strong hover:text-fg"
+        ><Icon name="arrow-up" size={15} />{t('footer.top')}</a
+      >
+    </div>
+  </div>
+</footer>

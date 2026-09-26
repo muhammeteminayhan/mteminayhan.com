@@ -1,0 +1,49 @@
+---
+title: 'PATHIKA: Otonom Kara Aracı'
+description: 'TEKNOFEST 2026 için Jetson Orin NX üzerinde 4×4 insansız kara aracına ROS 2 Humble otonomi yığını: SLAM, EKF sensör füzyonu, Nav2, slalom planlayıcı ve FSM görev yöneticisi.'
+---
+
+## Araç
+
+PATHIKA, **TEKNOFEST 2026 İnsansız Kara Aracı** yarışması için geliştirilen 4×4 skid-steer bir insansız kara aracı. Parkuru iki koşuda tamamlaması gerekiyor: biri uzaktan kumandalı, diğeri tam otonom.
+
+| Bileşen | Model | Not |
+| --- | --- | --- |
+| Ana bilgisayar | NVIDIA Jetson Orin NX 16 GB | 100 TOPS, CUDA, TensorRT |
+| LiDAR | Slamtec RPLidar A1M8 | 360°, 12 m menzil |
+| Derinlik kamerası | Intel RealSense D455 | 87° FOV, dahili IMU |
+| Sürüş kamerası | Logitech C920S | 1920 × 1080 |
+| Nişan kamerası | Feelworld 4K10X | 10× optik zoom |
+| Motor / ESC | Flipsky 6384 × 4 / FSESC 6.9 × 4 | BLDC, CAN üzerinden FOC, toplam 6 kW |
+| Batarya | 108 × 18650 Li-ion (12S9P) | 44 V nominal, 1,1 kWh |
+| Güvenlik MCU | STM32 NUCLEO-G0B1RE | bağımsız acil durdurma ve watchdog |
+
+## Yazılım mimarisi
+
+Her şey **ROS 2 Humble** üzerinde paketler halinde çalışıyor; önce **Gazebo**’da geliştirilip test ediliyor:
+
+- **`pathika_localization`**: `robot_localization` ile EKF sensör füzyonu (tekerlek odometrisi + IMU) ve `slam_toolbox` ile haritalama.
+- **`pathika_navigation`**: MPPI kontrolcüsüyle Nav2 ve koni bölümü için özel bir **slalom planlayıcı**.
+- **`pathika_perception`**: koni pozisyonlarını yayınlayan LiDAR tabanlı koni algılama; kamera akışında YOLOv8 görsel tespit (geliştiriliyor).
+- **`pathika_control`**: `/cmd_vel`’i dört teker hızına çeviren skid-steer kinematiği ve CAN üzerinden VESC ile PID motor kontrolü.
+- **`pathika_bringup`**: üst seviye launch dosyaları ve `/mission_cmd` ile mod/aşama değiştirip `/mission_status` yayınlayan **sonlu durum makinesi görev yöneticisi**.
+- **`pathika_description` / `pathika_msgs`**: URDF/xacro araç modeli (şasi, tekerlekler, LiDAR, IMU, kameralar) ve özel mesajlar (Cone, Detection, TurretCommand, MissionStatus).
+
+Temel bir tasarım kararı: **güvenlik ana bilgisayara bağlı değil**. STM32 bağımsız bir acil durdurma ve watchdog’u denetliyor; çöken bir düğüm ya da donan bir Jetson motorları çalışır halde bırakamıyor.
+
+## Benim payım
+
+Üç kişilik yazılım ekibinde **SLAM, slalom planlayıcı, kontrol katmanı, FSM görev yöneticisi ve bringup** benim sorumluluğumda; araç modelini ortak geliştiriyoruz. Algı, EKF füzyonu ve Nav2 yapılandırması takım arkadaşlarımda.
+
+```bash
+# simülasyonda tam sistem: Gazebo + SLAM + Nav2 + algı + kontrol + FSM
+ros2 launch pathika_bringup bringup.launch.py use_sim_time:=true
+
+# görev yöneticisini sür
+ros2 topic pub /mission_cmd std_msgs/msg/String "data: 'set_autonomous'"
+ros2 topic echo /mission_status
+```
+
+## Durum
+
+Yığın simülasyonda uçtan uca çalışıyor; şu anki iş onu gerçek araca taşımak: sensör kalibrasyonu, gerçek aktarma organında kontrolcü ayarı ve hâlâ eğitilmekte olan algı modelleri. Yarışma koşuları tamamlandığında sahadan ölçülmüş sonuçları buraya ekleyeceğim.

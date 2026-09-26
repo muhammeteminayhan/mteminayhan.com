@@ -1,0 +1,85 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/Icon.astro';
+import Figure from '@/components/mdx/Figure.astro';
+import Video from '@/components/mdx/Video.astro';
+import Callout from '@/components/mdx/Callout.astro';
+import Stats from '@/components/mdx/Stats.astro';
+import { profile } from '@/data/profile';
+import { getProject } from '@/data/projects';
+import type { Lang } from '@/i18n/ui';
+import { formatDate, localizePath, readingTime, useT } from '@/i18n/utils';
+import { slugOf } from '@/lib/content';
+
+interface Props {
+  lang: Lang;
+  post: CollectionEntry<'blog'>;
+}
+const { lang, post } = Astro.props;
+const t = useT(lang);
+const { Content } = await render(post);
+const minutes = readingTime(post.body ?? '');
+const project = post.data.project ? getProject(post.data.project) : undefined;
+const url = new URL(localizePath(lang, `/blog/${slugOf(post.id)}/`), profile.site).href;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.pubDate.toISOString(),
+  ...(post.data.updatedDate ? { dateModified: post.data.updatedDate.toISOString() } : {}),
+  author: { '@type': 'Person', name: profile.name, url: profile.site },
+  inLanguage: lang,
+  mainEntityOfPage: url,
+  keywords: post.data.tags.join(', '),
+};
+---
+
+<BaseLayout lang={lang} title={post.data.title} description={post.data.description} type="article" jsonLd={jsonLd}>
+  <article class="relative isolate">
+    <div class="bg-grid absolute inset-x-0 top-0 -z-10 h-[28rem] [mask-image:linear-gradient(to_bottom,black,transparent)]" aria-hidden="true"></div>
+    <header class="container-page max-w-3xl pt-28 sm:pt-36">
+      <a href={localizePath(lang, '/blog/')} class="reveal inline-flex items-center gap-2 text-sm text-muted transition hover:text-accent">
+        <Icon name="arrow-left" size={16} />
+        {t('blog.back')}
+      </a>
+      <p class="reveal mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-faint">
+        <time datetime={post.data.pubDate.toISOString()}>{formatDate(lang, post.data.pubDate)}</time>
+        <span aria-hidden="true">·</span>
+        <span>{minutes} {t('blog.minRead')}</span>
+      </p>
+      <h1 class="reveal mt-4 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-5xl" style="--d:60ms">{post.data.title}</h1>
+      <p class="reveal mt-5 text-lg leading-relaxed text-muted text-pretty" style="--d:120ms">{post.data.description}</p>
+      <div class="reveal mt-6 flex items-center gap-3 border-y border-line py-4" style="--d:160ms">
+        <span class="grid size-10 place-items-center rounded-full border border-line-strong bg-surface font-mono text-[0.65rem] text-accent">{profile.initials}</span>
+        <div class="text-sm">
+          <p class="font-medium">{profile.name}</p>
+          <p class="text-faint">{profile.title[lang]}</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-page max-w-3xl pt-10 pb-20">
+      <div class="prose-custom">
+        <Content components={{ Figure, Video, Callout, Stats }} />
+      </div>
+
+      <footer class="mt-14 flex flex-col gap-4 border-t border-line pt-8 sm:flex-row sm:items-center sm:justify-between">
+        <ul class="flex flex-wrap gap-1.5">
+          {post.data.tags.map((tag) => <li class="chip">{tag}</li>)}
+        </ul>
+        {
+          project?.caseStudy && (
+            <a href={localizePath(lang, `/projects/${project.slug}/`)} class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline">
+              {t('projects.caseStudy')}
+              <Icon name="arrow" size={15} />
+            </a>
+          )
+        }
+      </footer>
+    </div>
+  </article>
+</BaseLayout>

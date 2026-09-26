@@ -1,0 +1,38 @@
+---
+import { metrics } from '@/data/profile';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const fmt = (v: number, d: number) => v.toFixed(d);
+---
+
+<section id="metrics" class="relative border-y border-line bg-bg-soft/60" aria-label={t('metrics.title')}>
+  <div class="container-page grid grid-cols-1 divide-y divide-line sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
+    {
+      metrics.map((m, i) => (
+        <a
+          href={m.href ? localizePath(lang, m.href) : undefined}
+          class="reveal group relative block px-2 py-8 sm:px-6 lg:py-10"
+          style={`--d:${i * 90}ms`}
+        >
+          <span
+            class="block font-mono text-4xl font-semibold tracking-tight text-fg tabular-nums transition group-hover:text-accent sm:text-[2.6rem]"
+            data-count={m.value}
+            data-decimals={m.decimals}
+            data-prefix={m.prefix ?? ''}
+            data-suffix={m.suffix ?? ''}
+          >
+            {`${m.prefix ?? ''}${fmt(m.value, m.decimals)}${m.suffix ?? ''}`}
+          </span>
+          <span class="mt-2 block text-sm leading-snug text-muted">{m.label[lang]}</span>
+          <span class="mt-3 block font-mono text-[0.7rem] tracking-wide text-faint uppercase">{m.source[lang]}</span>
+        </a>
+      ))
+    }
+  </div>
+</section>

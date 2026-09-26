@@ -1,0 +1,27 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/Icon.astro';
+import { ui } from '@/i18n/ui';
+---
+
+<BaseLayout lang="en" title="404" alternates={false}>
+  <section class="relative isolate grid min-h-[80vh] place-items-center overflow-hidden px-4 pt-24 pb-16">
+    <canvas data-particles class="absolute inset-0 -z-10 size-full opacity-60" aria-hidden="true"></canvas>
+    <div class="text-center">
+      <p class="font-mono text-7xl font-bold text-accent sm:text-9xl">404</p>
+      <h1 class="mt-4 text-2xl font-bold sm:text-3xl">
+        {ui.en['404.title']} <span class="text-faint" lang="tr">/ {ui.tr['404.title']}</span>
+      </h1>
+      <p class="mx-auto mt-3 max-w-md text-muted">{ui.en['404.lead']}</p>
+      <p class="mx-auto mt-1 max-w-md text-sm text-faint" lang="tr">{ui.tr['404.lead']}</p>
+      <div class="mt-8 flex flex-wrap justify-center gap-3">
+        <a href="/" class="inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 font-semibold text-accent-fg">
+          <Icon name="arrow-left" size={17} />{ui.en['404.home']}
+        </a>
+        <a href="/tr/" lang="tr" class="inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 font-medium hover:border-accent">
+          {ui.tr['404.home']}
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

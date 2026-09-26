@@ -1,0 +1,49 @@
+---
+title: 'Sıfırdan Kalman / EKF'
+description: 'NumPy ile sıfırdan yazılmış Kalman ve Genişletilmiş Kalman Filtresi kütüphanesi; 1B takipten ivmeölçer–barometre füzyonuna, EKF radara ve gerçek bir drone uçuş kaydına uzanan yedi aşamalı örnek.'
+---
+
+import fusion from '@/assets/projects/kalman-filter-tutorial/sensor-fusion.png';
+import tracking from '@/assets/projects/kalman-filter-tutorial/2d-tracking.png';
+import flight from '@/assets/projects/kalman-filter-tutorial/flight-altitude.png';
+
+## Neden yazdım
+
+Durum kestirimi robotiğin sessiz omurgası: her drone, gezgin robot ve telefon, gürültülü sensörleri nerede olduğuna dair tek bir inanca dönüştürüyor. Tamamen anladığım bir sürüm istedim; bu yüzden filtreleri kendim yazdım ve her biri tek bir fikir ekleyen yedi çalıştırılabilir örnek hazırladım. Aynı fikirler, stajımdaki durum kestirimi çalışmalarında ve [GPS’siz İHA projesinde](/tr/projects/gps-denied-uav-localization/) de karşıma çıkıyor.
+
+## Kütüphane
+
+Minimum bağımlılıklı (NumPy / SciPy) iki küçük sınıf: sayısal kararlılık için Joseph formunda kovaryans güncellemesi yapan doğrusal bir `KalmanFilter` ve doğrusal olmayan modelleri Jacobian’larıyla doğrusallaştıran bir `ExtendedKalmanFilter`.
+
+```python
+kf = KalmanFilter(
+    F=np.array([[1, dt], [0, 1]]),   # sabit hız modeli
+    H=np.array([[1, 0]]),            # yalnızca konum ölçüyoruz
+    Q=np.diag([0.05, 0.05]),         # süreç gürültüsü
+    R=np.array([[9.0]]),             # ölçüm gürültüsü
+    x0=[0, 0], P0=np.diag([10, 10]),
+)
+for z in measurements:
+    kf.predict()
+    kf.update(z)
+```
+
+## Yedi örnek, her seferinde bir fikir
+
+1. **Gürültülü bir ölçüm:** problemin tanımı.
+2. **1B sabit hız:** yalnızca konumdan filtre hızı da çıkarıyor. Konum RMSE **2,7 → 1,7 m**.
+3. **Sabit ivme:** manevra yapan bir hedefi takip ediyor.
+4. **2B takip:** eğri bir yol boyunca 4 durumlu `[x, vx, y, vy]` filtre. Takip RMSE **2,2 → 0,9 m**.
+5. **Sensör füzyonu:** tahmini ivmeölçer yönlendiriyor, barometre düzeltiyor.
+6. **EKF radar:** menzil ve açı konuma göre doğrusal değil; EKF her adımda doğrusallaştırıyor.
+7. **Gerçek uçuş kaydı:** gerçek, ~45 dakikalık bağlı (tethered) bir drone uçuşu.
+
+<Figure src={fusion} alt="Yalnızca ivmeölçer, yalnızca barometre ve füzyonlu Kalman filtresi irtifa kestirimlerinin gerçek değerle karşılaştırması" caption="Örnek 05: irtifa RMSE barometreden 4,0 m, yalnızca ivmeölçerden 32 m, füzyonla 0,8 m." />
+
+<Figure src={tracking} alt="2B nesne takibi: eğri gerçek yolun etrafına dağılmış gürültülü konum ölçümleri ve yolu yakından izleyen Kalman kestirimi" caption="Örnek 04: eğri bir yol boyunca 2B takip." />
+
+## Gerçek veri vaka çalışması
+
+Son örnek simülasyonu geride bırakıyor. Araç üstü **barometreyi**, tutum kuaterniyonuyla dünya çerçevesine döndürülmüş **IMU düşey ivmesiyle** birleştiriyor ve ölçüm sınıfı gerçek referansa karşı doğruluyor. Füzyonlu kestirim gerçek değerin **2,7 m** içinde kalırken ham GPS **5,5 m** sapıyor; yakınlaştırma paneli filtrenin gerçek barometre titreşimini yumuşattığını gösteriyor.
+
+<Figure src={flight} alt="Gerçek drone uçuşu: 45 dakika boyunca ham GPS, barometre ve füzyonlu Kalman irtifasının gerçek değerle karşılaştırması, yakınlaştırılmış panelle" caption="Örnek 07: gerçek, ~45 dakikalık bağlı drone uçuş kaydı." />

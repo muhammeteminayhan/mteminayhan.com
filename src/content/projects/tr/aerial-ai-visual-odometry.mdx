@@ -1,0 +1,54 @@
+---
+title: 'Havacılıkta YZ: GPS’siz Görsel Odometri'
+description: 'TEKNOFEST 2026 Havacılıkta Yapay Zekâ finalisti. RAFT optik akış + homografi ve keyframe merdiveni, İHA’nın yer değiştirmesini alt-görüş kamerasından kestiriyor: 2.256 karelik tam provada 3,54 m ortalama hata.'
+---
+
+## Görev
+
+TEKNOFEST 2026 *Havacılıkta Yapay Zekâ* yarışmasında, bir İHA’nın aşağı bakan kamerasından gelen kareler üzerinde üç görev aynı canlı, puanlı oturumda çalışıyor:
+
+| Görev | Ne yapıyor | Omurga |
+| --- | --- | --- |
+| 1 | Nesne tespiti: taşıt, insan, iniş alanları ve durumları | YOLOv8s |
+| **2** | **GPS’siz konum: GPS kesintilerinde metre cinsinden X/Y/Z yer değiştirme (puanın %40’ı)** | **RAFT + homografi** |
+| 3 | Görüntü eşleme: verilen referans nesneleri akışta bulma | DINOv3 |
+
+**Görev 2 benimdi** ve uçtan uca tam prova edildi. Görev 1 ve 3, takım arkadaşlarımın eğittiği modellerden uyarlandı; üçünü yarışma sunucusuyla konuşan tek bir canlı istemcide birleştirdim. Takım **finale** kaldı.
+
+## Yaklaşım
+
+- **Önce geometri.** İlk veri keşfi +z’nin aşağıyı gösterdiğini (NED benzeri) ve yaw’ın ~360° döndüğünü ortaya koydu; sabit eksen eşlemesi yetmiyor, yönün sürekli takip edilmesi gerekiyor. Yer örnekleme mesafesi × odak uzaklığıyla irtifa kestirimi gerçek referansa karşı doğrulandı.
+- **VO çekirdeği.** İşaret ve eksen uzlaşımları gerçek görüntüye geçmeden önce sentetik bir sahnede kanıtlandı. Kareler arası hareket hem benzerlik hem homografi olarak kestiriliyor.
+- **GPU’da yoğun akış.** Birincil eşleyici olarak Lucas–Kanade’nin yerini RAFT optik akış aldı (LK + füzyon, GPU’suz yedek olarak duruyor).
+- **Keyframe merdiveni.** Yer değiştirmeleri ardışık kareler yerine 8 adım aralıklı keyframe’ler üzerinden zincirlemek, iki bağımsız test setinde sapmayı tutarlı biçimde azalttı. Aynı hilenin LK’ye yaramadığı da belgelendi.
+- **4K’ya hazır.** Çalışma çözünürlüğü politikası, tam çözünürlükten 4 cm’den az farkla kare başına ~0,4 sn bütçeyi koruyor.
+
+## Sonuçlar
+
+<Stats
+  items={[
+    { value: '3,54 m', label: 'ortalama hata, tam prova' },
+    { value: '2256/2256', label: 'işlenen kare' },
+    { value: '14×', label: '“tut” tabanının altında (sınav seti)' },
+    { value: '28 dk', label: '60 dk sınırın içinde çalışma' },
+  ]}
+/>
+
+- Taze kesinti senaryolarında RAFT + homografi ve keyframe merdiveni **3,56 m ortalama hataya** ulaştı (medyan 1,73 m, maks. 16,4 m). Karşılaştırma için, önceki 20 senaryoluk testte klasik tabanlar 55 m (*son konumu tut*) ve 67 m (*sabit hız*) seviyesindeydi.
+- Tam bir yarışma provası **2.256 karenin 2.256’sını** işledi: ortalama hata **3,54 m**, sağlıklı karelerde sıfır hata ve canlı ile çevrimdışı arasında 0,05 m fark.
+- **Dayanıklılık:** sentetik bozulmalar ve iki dış veri seti (denizde MOBDrone; güneşli / gün batımı / sisli / kış temalarıyla Mid-Air). Sis, gün batımı, bulanıklık ve kar sistemi bozmuyor; yalnızca aşırı gece hatayı kabaca iki katına çıkarıyor.
+
+## En önemli ders
+
+Çevrim içi turdan sonra ölçüme dayalı iyileştirme turları yaptım ve örnek setteki hatayı 4,5 m’den 2,8 m’ye indirdim. **Bu kazançların hiçbiri**, puanlı oturumun kendi kareleriyle yapılan genelleme sınavını geçemedi; bu yüzden teslim edilen sistem, puanlı oturumda gerçekten koşan reçete olarak kaldı.
+
+Sebep: tüm ayarlar tek bir örnek video üzerinde yapılmıştı ve o video, çevrim içi test oturumunun ta kendisiydi. Kesinti takvimini rastgeleleştirmek bu tür aşırı uyumu yakalamaz; takvim değişir, uçuş değişmez. O andan itibaren her değişiklik **üç uçuşlu bir kabul kapısından** geçmek zorunda: puanlı oturumun kareleri (veto), bir RGB uçuşu ve bağımsız bir **termal** uçuş.
+
+Bu çalışmadan iki bulgu daha:
+
+- **Bir gürültü tabanı.** OpenCV’nin RANSAC’ı nokta *sırasına* duyarlı: aynı noktalar farklı sırada verilince farklı bir düzlem seçilebiliyor. On permütasyon 3,96 ± 0,23 m verdi (%18,7 yayılım); yani ~0,4 m’nin altındaki tek koşuluk her fark gürültü olabilir. A/B testleri artık N permütasyonda eşleştirilmiş olarak koşuyor.
+- **Gerçek bir kazanç.** Inlier oranı kalite kapısı ölçümlerin çoğunu atıp sistemi sabit hız yedeğine düşürüyordu. Kapıyı gevşetmek (0,40 → 0,05) ve yeniden izdüşüm eşiğini kameraya göre normalize etmek sınavı **16,71 → 12,54 m**, termali **15,24 → 10,49 m (−%31)**, RGB’yi 3,87 → 3,60 m’ye getirdi.
+
+## Sırada ne var
+
+Kalan kesinti hatası **rastgele değil, sistematik**: tahmin edilen yörünge, gerçek yörüngenin ~2° döndürülmüş ve %3–4,5 ölçeklenmiş hali. Güncellemeleri sönümlemek durumu kötüleştiriyor, çünkü araç gerçekten dönüyor ve alçalıyor. Sonraki kazanç parametre ayarında değil, ölçüm katmanında (akış ve irtifa gözlemi) aranmalı.

@@ -1,0 +1,39 @@
+---
+import Icon from './Icon.astro';
+import PostCard from './PostCard.astro';
+import SectionHeading from './SectionHeading.astro';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useT } from '@/i18n/utils';
+import { getPosts } from '@/lib/content';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const posts = (await getPosts(lang)).slice(0, 2);
+---
+
+{
+  posts.length > 0 && (
+    <section id="writing" class="border-t border-line py-20 sm:py-28" aria-labelledby="writing-title">
+      <div class="container-page">
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeading id="writing-title" eyebrow={t('blog.eyebrow')} title={t('blog.title')} lead={t('blog.lead')} />
+          <a
+            href={localizePath(lang, '/blog/')}
+            class="reveal mb-10 inline-flex shrink-0 items-center gap-2 self-start rounded-xl border border-line px-4 py-2.5 text-sm transition hover:border-accent hover:text-accent sm:mb-12 sm:self-auto"
+          >
+            {t('blog.all')}
+            <Icon name="arrow" size={16} />
+          </a>
+        </div>
+        <div class="grid gap-6 md:grid-cols-2">
+          {posts.map((post, i) => (
+            <PostCard post={post} lang={lang} delay={i * 90} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}

@@ -1,0 +1,70 @@
+---
+import Icon from './Icon.astro';
+import SectionHeading from './SectionHeading.astro';
+import { about, focusAreas, nowItems, spokenLanguages } from '@/data/profile';
+import type { Lang } from '@/i18n/ui';
+import { useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<section id="about" class="py-20 sm:py-28" aria-labelledby="about-title">
+  <div class="container-page">
+    <SectionHeading id="about-title" eyebrow={t('about.eyebrow')} title={t('about.title')} />
+
+    <div class="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
+      <div class="space-y-5 text-lg leading-relaxed text-muted">
+        {about.paragraphs.map((p, i) => <p class="reveal text-pretty" style={`--d:${i * 80}ms`}>{p[lang]}</p>)}
+      </div>
+
+      <aside class="reveal card relative overflow-hidden p-6" style="--d:120ms" aria-labelledby="now-title">
+        <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent to-transparent" aria-hidden="true"></div>
+        <h3 id="now-title" class="eyebrow mb-4 flex items-center gap-2">
+          <span class="relative flex size-2">
+            <span class="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60"></span>
+            <span class="relative inline-flex size-2 rounded-full bg-accent"></span>
+          </span>
+          {t('about.now')}
+        </h3>
+        <ul class="space-y-3.5">
+          {
+            nowItems.map((item) => (
+              <li class="flex gap-3 text-sm leading-relaxed">
+                <Icon name="arrow" size={16} class="mt-0.5 shrink-0 text-accent" />
+                <span>{item[lang]}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="mt-6 border-t border-line pt-5">
+          <p class="mb-2 font-mono text-[0.7rem] tracking-wider text-faint uppercase">{t('about.languages')}</p>
+          <div class="flex flex-wrap gap-2">
+            {spokenLanguages.map((sl) => <span class="chip">{sl[lang]}</span>)}
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <h3 class="sr-only">{t('about.focus')}</h3>
+    <div class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        focusAreas.map((f, i) => (
+          <div
+            class="reveal card group relative overflow-hidden p-5 transition hover:border-line-strong"
+            style={`--d:${i * 80}ms`}
+          >
+            <div class="mb-4 grid size-11 place-items-center rounded-xl border border-line bg-accent-soft text-accent transition group-hover:scale-105">
+              <Icon name={f.icon} size={22} />
+            </div>
+            <h4 class="font-semibold">{f.title[lang]}</h4>
+            <p class="mt-2 text-sm leading-relaxed text-muted">{f.text[lang]}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,131 @@
+---
+import Icon from './Icon.astro';
+import { profile } from '@/data/profile';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, switchLangPath, useT } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const home = localizePath(lang, '/');
+const other: Lang = lang === 'en' ? 'tr' : 'en';
+const switchHref = switchLangPath(Astro.url.pathname, other);
+const path = Astro.url.pathname;
+
+const links = [
+  { href: `${home}#about`, label: t('nav.about'), match: '' },
+  { href: localizePath(lang, '/projects/'), label: t('nav.projects'), match: '/projects' },
+  { href: `${home}#experience`, label: t('nav.experience'), match: '' },
+  { href: localizePath(lang, '/blog/'), label: t('nav.blog'), match: '/blog' },
+  { href: `${home}#contact`, label: t('nav.contact'), match: '' },
+];
+const isActive = (m: string) => m !== '' && path.replace(/^\/tr/, '').startsWith(m);
+---
+
+<header
+  id="site-header"
+  class="fixed inset-x-0 top-0 z-50 border-b border-transparent transition-[background-color,border-color,backdrop-filter] duration-300 data-[scrolled=true]:border-line data-[scrolled=true]:bg-bg/75 data-[scrolled=true]:backdrop-blur-xl"
+>
+  <nav class="container-page flex h-16 items-center justify-between gap-4" aria-label="Primary">
+    <a href={home} class="group flex items-center gap-2.5 font-semibold tracking-tight" aria-label={profile.name}>
+      <span
+        class="grid size-9 place-items-center rounded-xl border border-line-strong bg-surface font-mono text-[0.7rem] text-accent transition group-hover:border-accent"
+        aria-hidden="true">{profile.initials}</span
+      >
+      <span class="hidden text-sm sm:inline">{profile.shortName}</span>
+    </a>
+
+    <ul class="hidden items-center gap-1 md:flex">
+      {
+        links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              class:list={[
+                'rounded-lg px-3 py-2 text-sm transition hover:bg-surface-2 hover:text-fg',
+                isActive(l.match) ? 'text-fg' : 'text-muted',
+              ]}
+              aria-current={isActive(l.match) ? 'page' : undefined}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="flex items-center gap-1.5">
+      <a
+        href={switchHref}
+        hreflang={other}
+        lang={other}
+        class="flex h-9 items-center gap-1.5 rounded-lg border border-line px-2.5 font-mono text-xs text-muted transition hover:border-line-strong hover:text-fg"
+        title={t('lang.switchLabel')}
+        aria-label={t('lang.switchLabel')}
+      >
+        <Icon name="globe" size={15} />
+        {other.toUpperCase()}
+      </a>
+      <button
+        type="button"
+        data-theme-toggle
+        class="grid size-9 place-items-center rounded-lg border border-line text-muted transition hover:border-line-strong hover:text-fg"
+        aria-label={t('theme.toggle')}
+        title={t('theme.toggle')}
+      >
+        <span class="theme-icon-dark"><Icon name="moon" size={16} /></span>
+        <span class="theme-icon-light"><Icon name="sun" size={16} /></span>
+      </button>
+      <button
+        type="button"
+        data-menu-toggle
+        class="grid size-9 place-items-center rounded-lg border border-line text-muted transition hover:text-fg md:hidden"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        aria-label={t('nav.menu')}
+        data-label-open={t('nav.menu')}
+        data-label-close={t('nav.close')}
+      >
+        <span class="menu-open"><Icon name="menu" size={18} /></span>
+        <span class="menu-close hidden"><Icon name="x" size={18} /></span>
+      </button>
+    </div>
+  </nav>
+
+  <div id="mobile-menu" class="hidden border-t border-line bg-bg/95 backdrop-blur-xl md:hidden">
+    <ul class="container-page flex flex-col py-3">
+      {
+        links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              data-menu-link
+              class="block rounded-lg px-3 py-3 text-base text-muted transition hover:bg-surface-2 hover:text-fg"
+            >
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+      <li class="mt-2 border-t border-line pt-3">
+        <a
+          href={profile.cv}
+          download
+          class="flex items-center gap-2 rounded-lg px-3 py-3 text-base text-accent"
+        >
+          <Icon name="download" size={18} />
+          {t('hero.ctaCV')}
+        </a>
+      </li>
+    </ul>
+  </div>
+</header>
+
+<style>
+  :global([data-theme='dark']) .theme-icon-light,
+  :global([data-theme='light']) .theme-icon-dark {
+    display: none;
+  }
+</style>

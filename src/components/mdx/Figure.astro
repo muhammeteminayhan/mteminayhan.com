@@ -1,0 +1,27 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
+interface Props {
+  src: ImageMetadata | string;
+  alt: string;
+  caption?: string;
+  /** frame white-background plots on paper so they read well in dark mode */
+  paper?: boolean;
+  wide?: boolean;
+}
+const { src, alt, caption, paper = true, wide = false } = Astro.props;
+---
+
+<figure class:list={['not-prose my-10', wide && 'lg:-mx-16']}>
+  <div class:list={['overflow-hidden rounded-2xl border border-line', paper ? 'bg-paper p-2 sm:p-4' : 'bg-surface']}>
+    {
+      typeof src === 'string' ? (
+        <img src={src} alt={alt} loading="lazy" decoding="async" class="mx-auto h-auto w-full" />
+      ) : (
+        <Image src={src} alt={alt} widths={[480, 800, 1200]} sizes="(min-width: 1024px) 48rem, 100vw" class="mx-auto h-auto w-full" />
+      )
+    }
+  </div>
+  {caption && <figcaption class="mt-3 text-center text-sm text-faint">{caption}</figcaption>}
+</figure>

@@ -1,0 +1,54 @@
+---
+title: 'Aerial AI: GPS-Free Visual Odometry'
+description: 'TEKNOFEST 2026 Artificial Intelligence in Aviation finalist. RAFT optical flow + homography with a keyframe ladder estimates a UAV’s displacement from its downward camera: 3.54 m mean error on a full 2,256-frame rehearsal.'
+---
+
+## The task
+
+TEKNOFEST 2026’s *Artificial Intelligence in Aviation* competition runs three tasks on frames from a UAV’s downward-looking camera, all in the same live, scored session:
+
+| Task | What it does | Backbone |
+| --- | --- | --- |
+| 1 | Object detection: vehicles, people, landing areas and their state | YOLOv8s |
+| **2** | **GPS-free position: X/Y/Z displacement in metres during GPS outages (40% of the score)** | **RAFT + homography** |
+| 3 | Image matching: find given reference objects in the stream | DINOv3 |
+
+**Task 2 was mine** and fully rehearsed end to end. Tasks 1 and 3 were adapted from models my teammates trained, and I integrated all three into one live client that talks to the competition server. The team reached the **finals**.
+
+## Approach
+
+- **Geometry first.** Early data exploration showed +z points down (NED-like) and that the aircraft’s yaw sweeps through ~360°, so a fixed axis mapping was not enough; heading has to be tracked continuously. Altitude from ground-sample distance × focal length was validated against ground truth.
+- **VO core.** Sign and axis conventions were proven on a synthetic scene before touching real footage. Motion between frames is estimated as a similarity and as a homography.
+- **Dense flow on the GPU.** RAFT optical flow replaced Lucas–Kanade as the primary matcher (LK + fusion is kept as a GPU-free fallback).
+- **Keyframe ladder.** Chaining displacements through keyframes 8 steps apart instead of consecutive frames cut drift consistently on two independent test sets. The same trick did *not* help LK, and that is documented too.
+- **4K-ready.** A working-resolution policy keeps the budget at ~0.4 s per frame with less than 4 cm difference from full resolution.
+
+## Results
+
+<Stats
+  items={[
+    { value: '3.54 m', label: 'mean error, full rehearsal' },
+    { value: '2256/2256', label: 'frames processed' },
+    { value: '14×', label: 'below the “hold” baseline (exam set)' },
+    { value: '28 min', label: 'runtime of 60 min limit' },
+  ]}
+/>
+
+- On fresh outage scenarios, RAFT + homography with the keyframe ladder reached a **mean error of 3.56 m** (median 1.73 m, max 16.4 m). For reference, on the earlier 20-scenario benchmark the classical baselines sat at 55 m (*hold last position*) and 67 m (*constant velocity*).
+- A full competition rehearsal processed **2,256 of 2,256 frames** with a mean error of **3.54 m**, no errors on healthy frames, and a live-vs-offline difference of 0.05 m.
+- **Robustness:** synthetic degradations plus two external datasets (MOBDrone at sea, Mid-Air with sunny / sunset / foggy / winter themes). Fog, sunset, blur and snow do not break the system; only extreme night roughly doubles the error.
+
+## The lesson that mattered most
+
+After the online round I ran measurement-driven tuning rounds and got the sample-set error from 4.5 m down to 2.8 m. **None of those gains survived** a generalisation exam on the scored session’s own frames, so the shipped system stayed the recipe that actually ran in the scored session.
+
+The reason: all tuning had been done on one sample video, which turned out to be the online test session itself. Randomising the outage schedule does not catch that kind of overfitting, because the schedule varies but the flight does not. From then on, every change had to pass a **three-flight acceptance gate**: the scored session’s frames (veto), an RGB flight, and an independent **thermal** flight.
+
+Two more findings from that work:
+
+- **A noise floor.** OpenCV’s RANSAC is sensitive to point *order*: the same points in a different order can pick a different plane. Ten permutations gave 3.96 ± 0.23 m, an 18.7% spread, so any single-run difference under ~0.4 m is noise. A/B tests are now paired over N permutations.
+- **One real win.** The inlier-ratio quality gate was throwing away most measurements and dropping the system into its constant-velocity fallback. Relaxing it (0.40 → 0.05) with a camera-normalised reprojection threshold improved the exam from **16.71 → 12.54 m**, thermal from **15.24 → 10.49 m (−31%)** and RGB from 3.87 → 3.60 m.
+
+## What I would do next
+
+The residual outage error is **systematic, not random**: the predicted track is the ground truth rotated by ~2° and scaled by 3–4.5%. Damping updates makes it worse, because the aircraft really is turning and descending. The next gain lives in the measurement layer (flow and altitude observation), not in parameter tuning.
